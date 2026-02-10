@@ -6,6 +6,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import dynamic from "next/dynamic";
+import { Spinner } from "@/components/ui/spinner";
 
 const ExcalidrawWrapper = dynamic(
   async () =>
@@ -21,7 +22,7 @@ export default function PublicCanvasPage() {
   if (canvas === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <Spinner className="size-8" />{" "}
       </div>
     );
   }
@@ -39,18 +40,5 @@ export default function PublicCanvasPage() {
     );
   }
 
-  return (
-    <ExcalidrawWrapper
-      user={{
-        id: "",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        email: "",
-        emailVerified: false,
-        name: canvas.title,
-      }}
-      initialData={canvas.data}
-      viewMode
-    />
-  );
+  return <ExcalidrawWrapper initialData={canvas.data} viewMode />;
 }

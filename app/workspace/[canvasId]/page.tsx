@@ -9,6 +9,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw";
 import { useCollaboration } from "@/hooks/use-collaboration";
 import dynamic from "next/dynamic";
+import { Spinner } from "@/components/ui/spinner";
 
 const ExcalidrawWrapper = dynamic(
   async () =>
@@ -54,6 +55,16 @@ export default function CanvasPage() {
     }
   }, [sessionPending, session, router]);
 
+  // Set the browser tab title to the canvas name
+  React.useEffect(() => {
+    if (canvas?.title) {
+      document.title = `Drawing - ${canvas.title}`;
+    }
+    return () => {
+      document.title = "Drawing";
+    };
+  }, [canvas?.title]);
+
   // Owner save handler — only used when collaboration is NOT enabled
   // (when collaboration is enabled, the hook handles element sync)
   const handleChange = React.useCallback(
@@ -75,7 +86,7 @@ export default function CanvasPage() {
   if (sessionPending || !session || canvas === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <Spinner className="size-8" />
       </div>
     );
   }
@@ -100,7 +111,6 @@ export default function CanvasPage() {
 
   return (
     <ExcalidrawWrapper
-      user={session.user}
       initialData={canvas.data}
       onSave={handleChange}
       onBack={() => router.push("/workspace")}

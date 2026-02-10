@@ -9,18 +9,11 @@ import type {
   BinaryFileData,
 } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
+import { Button } from "../ui/button";
+import { ArrowLeft } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type ExcalidrawWrapperProps = {
-  user: {
-    id: string;
-    createdAt: Date;
-    updatedAt: Date;
-    email: string;
-    emailVerified: boolean;
-    name: string;
-    image?: string | null | undefined;
-    userId?: string | null | undefined;
-  };
   initialData?: string;
   onSave?: (data: string) => void;
   onBack?: () => void;
@@ -39,7 +32,6 @@ type ExcalidrawWrapperProps = {
 const SAVE_DEBOUNCE_MS = 1000;
 
 const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
-  user,
   initialData,
   onSave,
   onBack,
@@ -143,8 +135,27 @@ const ExcalidrawWrapper: React.FC<ExcalidrawWrapperProps> = ({
             clearCanvas: !viewMode,
           },
         }}
-        renderTopRightUI={() => <div></div>}
-      />
+      >
+        {onBack && (
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={onBack}
+                  className="absolute left-20 bg-[#ececf4] hover:bg-primary/10 shadow border-0 top-4 z-10 flex items-center gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              }
+            />
+            <TooltipContent>
+              <p>Back</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </Excalidraw>
     </div>
   );
 };

@@ -19,6 +19,16 @@ import {
   Users,
   UserX,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 
 type CollaboratorInfo = {
@@ -65,6 +75,8 @@ export function CanvasCard({
   collaborators,
 }: CanvasCardProps) {
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [deleteOpen, setDeleteOpen] = React.useState(false);
+  const pendingDeleteEvent = React.useRef<React.MouseEvent | null>(null);
   const isPublic = canvas.isPublic === true;
   const isCollabEnabled = canvas.collaborationEnabled === true;
 
@@ -225,7 +237,9 @@ export function CanvasCard({
                 variant="destructive"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onDelete(e as unknown as React.MouseEvent);
+                  pendingDeleteEvent.current = e as unknown as React.MouseEvent;
+                  setMenuOpen(false);
+                  setDeleteOpen(true);
                 }}
               >
                 <Trash2 />
@@ -245,6 +259,32 @@ export function CanvasCard({
           Edited {formatRelativeDate(canvas.updatedAt)}
         </span>
       </div>
+
+      {/* Delete confirmation */}
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete canvas</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete &ldquo;{canvas.title}&rdquo;? This
+              action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(pendingDeleteEvent.current ?? e);
+                setDeleteOpen(false);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

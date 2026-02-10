@@ -10,6 +10,7 @@ import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import { CanvasGrid } from "@/components/workspace/canvas-grid";
 import { CreateCanvasDialog } from "@/components/workspace/create-canvas-dialog";
 import { RenameCanvasDialog } from "@/components/workspace/rename-canvas-dialog";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function WorkspacePage() {
   const router = useRouter();
@@ -50,7 +51,7 @@ export default function WorkspacePage() {
   if (isPending || !session) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <Spinner className="size-8" />
       </div>
     );
   }
