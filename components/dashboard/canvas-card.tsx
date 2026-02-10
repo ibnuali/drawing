@@ -13,12 +13,18 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
-  Copy,
   Globe,
   Lock,
   Link,
+  Users,
+  UserX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+type CollaboratorInfo = {
+  count: number;
+  names: string[];
+};
 
 type CanvasCardProps = {
   canvas: Doc<"canvases">;
@@ -26,6 +32,9 @@ type CanvasCardProps = {
   onDelete: (e: React.MouseEvent) => void;
   onRename: () => void;
   onTogglePublic: () => void;
+  onToggleCollaboration: () => void;
+  onCopyCollabLink: () => void;
+  collaborators?: CollaboratorInfo;
 };
 
 function formatRelativeDate(timestamp: number): string {
@@ -51,9 +60,13 @@ export function CanvasCard({
   onDelete,
   onRename,
   onTogglePublic,
+  onToggleCollaboration,
+  onCopyCollabLink,
+  collaborators,
 }: CanvasCardProps) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const isPublic = canvas.isPublic === true;
+  const isCollabEnabled = canvas.collaborationEnabled === true;
 
   const copyPublicLink = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -104,6 +117,49 @@ export function CanvasCard({
           </div>
         )}
 
+        {/* Collaboration badge */}
+        {isCollabEnabled && (
+          <div
+            className={cn(
+              "absolute left-2 flex items-center gap-1 rounded-md bg-blue-500/10 px-1.5 py-0.5 text-blue-600 dark:text-blue-400",
+              isPublic ? "top-8" : "top-2",
+            )}
+          >
+            <Users className="size-3" />
+            <span className="text-[10px] font-medium">Collab</span>
+          </div>
+        )}
+
+        {/* Active collaborator indicators */}
+        {collaborators && collaborators.count > 0 && (
+          <div className="absolute bottom-2 left-2 group/collab">
+            <div className="flex items-center gap-1">
+              {collaborators.names.slice(0, 3).map((name, i) => (
+                <div
+                  key={i}
+                  className="flex size-5 items-center justify-center rounded-full bg-emerald-500 text-[9px] font-bold text-white ring-2 ring-background"
+                  style={{ marginLeft: i > 0 ? "-4px" : "0" }}
+                  title={name}
+                >
+                  {name.charAt(0).toUpperCase()}
+                </div>
+              ))}
+              {collaborators.count > 3 && (
+                <div
+                  className="flex size-5 items-center justify-center rounded-full bg-muted text-[9px] font-medium text-muted-foreground ring-2 ring-background"
+                  style={{ marginLeft: "-4px" }}
+                >
+                  +{collaborators.count - 3}
+                </div>
+              )}
+            </div>
+            {/* Tooltip on hover */}
+            <div className="pointer-events-none absolute bottom-full left-0 mb-1 hidden rounded-md bg-popover px-2 py-1 text-xs text-popover-foreground shadow-md ring-1 ring-foreground/10 group-hover/collab:block">
+              {collaborators.names.join(", ")}
+            </div>
+          </div>
+        )}
+
         {/* Hover actions */}
         <div
           className={cn(
@@ -118,7 +174,7 @@ export function CanvasCard({
             >
               <MoreHorizontal className="size-3.5" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={4}>
+            <DropdownMenuContent className={"w-fit"} align="end" sideOffset={4}>
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
@@ -135,12 +191,33 @@ export function CanvasCard({
                 }}
               >
                 {isPublic ? <Lock /> : <Globe />}
-                {isPublic ? "Make private" : "Share publicly"}
+                {isPublic ? "Make private" : "Share public"}
               </DropdownMenuItem>
               {isPublic && (
                 <DropdownMenuItem onClick={copyPublicLink}>
                   <Link />
                   Copy public link
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleCollaboration();
+                }}
+              >
+                {isCollabEnabled ? <UserX /> : <Users />}
+                {isCollabEnabled ? "Stop collaborating" : "Collaborate"}
+              </DropdownMenuItem>
+              {isCollabEnabled && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCopyCollabLink();
+                  }}
+                >
+                  <Link />
+                  Copy collab link
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />

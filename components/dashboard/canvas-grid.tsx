@@ -4,6 +4,11 @@ import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { CanvasCard } from "./canvas-card";
 import { NewCanvasButton } from "./new-canvas-button";
 
+type CollaboratorInfo = {
+  count: number;
+  names: string[];
+};
+
 type CanvasGridProps = {
   canvases: Doc<"canvases">[] | undefined;
   onCreate: () => void;
@@ -11,6 +16,9 @@ type CanvasGridProps = {
   onDelete: (e: React.MouseEvent, id: Id<"canvases">) => void;
   onRename: (id: Id<"canvases">) => void;
   onTogglePublic: (id: Id<"canvases">) => void;
+  onToggleCollaboration: (id: Id<"canvases">) => void;
+  onCopyCollabLink: (id: Id<"canvases">) => void;
+  activeCollaborators?: Record<string, CollaboratorInfo>;
 };
 
 export function CanvasGrid({
@@ -20,6 +28,9 @@ export function CanvasGrid({
   onDelete,
   onRename,
   onTogglePublic,
+  onToggleCollaboration,
+  onCopyCollabLink,
+  activeCollaborators,
 }: CanvasGridProps) {
   const isLoading = canvases === undefined;
 
@@ -54,6 +65,9 @@ export function CanvasGrid({
             onDelete={(e) => onDelete(e, canvas._id)}
             onRename={() => onRename(canvas._id)}
             onTogglePublic={() => onTogglePublic(canvas._id)}
+            onToggleCollaboration={() => onToggleCollaboration(canvas._id)}
+            onCopyCollabLink={() => onCopyCollabLink(canvas._id)}
+            collaborators={activeCollaborators?.[canvas._id]}
           />
         ))}
       </div>

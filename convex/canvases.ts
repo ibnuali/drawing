@@ -78,3 +78,62 @@ export const getPublic = query({
     return canvas;
   },
 });
+
+export const toggleCollaboration = mutation({
+  args: { id: v.id("canvases"), userId: v.string() },
+  handler: async (ctx, args) => {
+    const canvas = await ctx.db.get(args.id);
+    if (!canvas) throw new Error("Canvas not found");
+    if (canvas.ownerId !== args.userId) throw new Error("Not authorized");
+
+    const enabled = !canvas.collaborationEnabled;
+    await ctx.db.patch(args.id, { collaborationEnabled: enabled });
+
+    // If disabling, clean up non-owner presence records
+    if (!enabled) {
+      const presenceRecords = await ctx.db
+        .query("presence")
+        .withIndex("by_canvas", (q) => q.eq("canvasId", args.id))
+        .collect();
+      for (const record of presenceRecords) {
+        if (record.userId !== args.userId) {
+          await ctx.db.delete(record._id);
+        }
+      }
+    }
+
+    return enabled;
+  },
+});
+
+export const getForCollaboration = query({
+  args: { id: v.id("canvases"), userId: v.string() },
+  handler: async (ctx, args) => {
+    const canvas = await ctx.db.get(args.id);
+    if (!canvas) return null;
+    if (canvas.ownerId === args.userId) return canvas;
+    if (canvas.collaborationEnabled) return canvas;
+    return null;
+  },
+});
+
+export const updateElements = mutation({
+  args: {
+    id: v.id("canvases"),
+    data: v.string(),
+    userId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const canvas = await ctx.db.get(args.id);
+    if (!canvas) throw new Error("Canvas not found");
+
+    if (canvas.ownerId !== args.userId && !canvas.collaborationEnabled) {
+      throw new Error("Not authorized");
+    }
+
+    await ctx.db.patch(args.id, {
+      data: args.data,
+      updatedAt: Date.now(),
+    });
+  },
+});

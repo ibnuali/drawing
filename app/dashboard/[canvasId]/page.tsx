@@ -6,6 +6,8 @@ import { useSession } from "@/lib/auth-client";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw";
+import { useCollaboration } from "@/hooks/use-collaboration";
 import dynamic from "next/dynamic";
 
 const ExcalidrawWrapper = dynamic(
@@ -20,8 +22,31 @@ export default function CanvasPage() {
   const { data: session, isPending: sessionPending } = useSession();
 
   const canvasId = params.canvasId as Id<"canvases">;
-  const canvas = useQuery(api.canvases.get, { id: canvasId });
+  const userId = session?.user?.id ?? "";
+
+  // Use getForCollaboration instead of get — supports non-owner access
+  const canvas = useQuery(
+    api.canvases.getForCollaboration,
+    userId ? { id: canvasId, userId } : "skip",
+  );
+
+  // Keep the original update mutation for the owner's own save path
   const updateCanvas = useMutation(api.canvases.update);
+
+  // Track the Excalidraw API instance for the collaboration hook
+  const [excalidrawAPI, setExcalidrawAPI] =
+    React.useState<ExcalidrawImperativeAPI | null>(null);
+
+  const collaborationEnabled = !!canvas?.collaborationEnabled;
+
+  // Enable the collaboration hook when the canvas has collaboration turned on
+  const { isCollaborating, collaborators, handlePointerUpdate } =
+    useCollaboration({
+      canvasId,
+      user: { id: userId, name: session?.user?.name ?? "Anonymous" },
+      excalidrawAPI,
+      enabled: collaborationEnabled,
+    });
 
   React.useEffect(() => {
     if (!sessionPending && !session) {
@@ -29,11 +54,22 @@ export default function CanvasPage() {
     }
   }, [sessionPending, session, router]);
 
+  // Owner save handler — only used when collaboration is NOT enabled
+  // (when collaboration is enabled, the hook handles element sync)
   const handleChange = React.useCallback(
     (data: string) => {
-      updateCanvas({ id: canvasId, data });
+      if (!collaborationEnabled) {
+        updateCanvas({ id: canvasId, data });
+      }
     },
-    [canvasId, updateCanvas],
+    [canvasId, updateCanvas, collaborationEnabled],
+  );
+
+  const handleExcalidrawAPI = React.useCallback(
+    (api: ExcalidrawImperativeAPI) => {
+      setExcalidrawAPI(api);
+    },
+    [],
   );
 
   if (sessionPending || !session || canvas === undefined) {
@@ -44,10 +80,20 @@ export default function CanvasPage() {
     );
   }
 
+  // Canvas not found OR collaboration disabled for non-owner
   if (canvas === null) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground text-sm">Canvas not found.</p>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+        <p className="text-muted-foreground text-sm">
+          This canvas is not available. It may not exist or collaboration may be
+          disabled.
+        </p>
+        <button
+          className="text-sm underline"
+          onClick={() => router.push("/dashboard")}
+        >
+          Back to dashboard
+        </button>
       </div>
     );
   }
@@ -58,6 +104,10 @@ export default function CanvasPage() {
       initialData={canvas.data}
       onSave={handleChange}
       onBack={() => router.push("/dashboard")}
+      isCollaborating={isCollaborating}
+      collaborators={collaborators}
+      onPointerUpdate={handlePointerUpdate}
+      onExcalidrawAPI={handleExcalidrawAPI}
     />
   );
 }
