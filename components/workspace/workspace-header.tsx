@@ -5,15 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogOut, Search, Plus } from "lucide-react";
 
-type DashboardHeaderProps = {
+type WorkspaceHeaderProps = {
   searchQuery: string;
   onSearchChange: (query: string) => void;
 };
 
-export function DashboardHeader({
+export function WorkspaceHeader({
   searchQuery,
   onSearchChange,
-}: DashboardHeaderProps) {
+}: WorkspaceHeaderProps) {
   const { data: session, isPending } = useSession();
 
   const initials = session?.user.name

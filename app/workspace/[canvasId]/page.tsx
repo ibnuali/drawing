@@ -90,9 +90,9 @@ export default function CanvasPage() {
         </p>
         <button
           className="text-sm underline"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/workspace")}
         >
-          Back to dashboard
+          Back to workspace
         </button>
       </div>
     );
@@ -103,7 +103,7 @@ export default function CanvasPage() {
       user={session.user}
       initialData={canvas.data}
       onSave={handleChange}
-      onBack={() => router.push("/dashboard")}
+      onBack={() => router.push("/workspace")}
       isCollaborating={isCollaborating}
       collaborators={collaborators}
       onPointerUpdate={handlePointerUpdate}

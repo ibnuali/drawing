@@ -6,12 +6,12 @@ import { useSession } from "@/lib/auth-client";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { CanvasGrid } from "@/components/dashboard/canvas-grid";
-import { CreateCanvasDialog } from "@/components/dashboard/create-canvas-dialog";
-import { RenameCanvasDialog } from "@/components/dashboard/rename-canvas-dialog";
+import { WorkspaceHeader } from "@/components/workspace/workspace-header";
+import { CanvasGrid } from "@/components/workspace/canvas-grid";
+import { CreateCanvasDialog } from "@/components/workspace/create-canvas-dialog";
+import { RenameCanvasDialog } from "@/components/workspace/rename-canvas-dialog";
 
-export default function DashboardPage() {
+export default function WorkspacePage() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -60,7 +60,7 @@ export default function DashboardPage() {
       title,
       ownerId: session.user.id,
     });
-    router.push(`/dashboard/${id}`);
+    router.push(`/workspace/${id}`);
   };
 
   const handleDelete = async (e: React.MouseEvent, id: Id<"canvases">) => {
@@ -89,19 +89,19 @@ export default function DashboardPage() {
   };
 
   const handleCopyCollabLink = (id: Id<"canvases">) => {
-    navigator.clipboard.writeText(`${window.location.origin}/dashboard/${id}`);
+    navigator.clipboard.writeText(`${window.location.origin}/workspace/${id}`);
   };
 
   return (
     <div className="bg-background min-h-screen">
-      <DashboardHeader
+      <WorkspaceHeader
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
       />
       <CanvasGrid
         canvases={canvases}
         onCreate={() => setCreateDialogOpen(true)}
-        onOpen={(id) => router.push(`/dashboard/${id}`)}
+        onOpen={(id) => router.push(`/workspace/${id}`)}
         onDelete={handleDelete}
         onRename={handleRename}
         onTogglePublic={handleTogglePublic}

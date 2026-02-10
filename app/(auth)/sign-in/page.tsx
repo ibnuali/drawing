@@ -37,7 +37,7 @@ export default function SignInPage() {
       setError(error.message ?? "Something went wrong");
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      router.push("/workspace");
       router.refresh();
     }
   }
@@ -98,7 +98,7 @@ export default function SignInPage() {
             className="w-full"
             disabled={loading}
             onClick={() =>
-              signIn.social({ provider: "google", callbackURL: "/dashboard" })
+              signIn.social({ provider: "google", callbackURL: "/workspace" })
             }
           >
             <svg viewBox="0 0 24 24" className="size-4">

@@ -108,7 +108,7 @@ export default function SignUpPage() {
             className="w-full"
             disabled={loading}
             onClick={() =>
-              signIn.social({ provider: "google", callbackURL: "/dashboard" })
+              signIn.social({ provider: "google", callbackURL: "/workspace" })
             }
           >
             <svg viewBox="0 0 24 24" className="size-4">

@@ -1,6 +1,6 @@
 import { ConvexClientProvider } from "@/components/convex-provider";
 
-export default function DashboardLayout({
+export default function WorkspaceLayout({
   children,
 }: {
   children: React.ReactNode;
