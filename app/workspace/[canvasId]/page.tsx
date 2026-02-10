@@ -27,7 +27,6 @@ export default function CanvasPage() {
 
   // Lightweight query to load the canvas and determine collaboration state
   const canvas = useQuery(api.canvases.get, userId ? { id: canvasId } : "skip");
-
   const isOwner = !!canvas && canvas.ownerId === userId;
   const collaborationEnabled = !!canvas?.collaborationEnabled;
 

@@ -27,7 +27,7 @@ const presenceApi = {
 
 // --- Timing constants ---
 const POINTER_THROTTLE_MS = 50;
-const ELEMENT_DEBOUNCE_MS = 500;
+const ELEMENT_SYNC_MS = 100; // throttle interval for element sync
 
 export interface UseCollaborationOptions {
   canvasId: Id<"canvases">;
@@ -75,6 +75,7 @@ export function useCollaboration({
   const pointerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const elementTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastPointerTimeRef = useRef(0);
+  const lastElementSyncRef = useRef(0);
   const lastRemoteDataRef = useRef<string | undefined>(undefined);
   const isApplyingRemoteRef = useRef(false);
 
@@ -218,39 +219,56 @@ export function useCollaboration({
     [enabled, canvasId, user.id, user.name, userColor, updatePresence],
   );
 
-  // --- Debounced element sync via Excalidraw onChange listener ---
+  // --- Throttled element sync via Excalidraw onChange listener ---
+  // Sends immediately on first change, then throttles subsequent changes
+  // so updates go out at most every ELEMENT_SYNC_MS.
   useEffect(() => {
     if (!enabled || !excalidrawAPI) return;
+
+    const sendUpdate = (elements: readonly ExcalidrawElement[]) => {
+      const typedElements = elements as ExcalidrawElement[];
+      const allFiles = excalidrawAPI.getFiles();
+
+      // Collect only files referenced by image elements
+      const usedFileIds = new Set(
+        typedElements
+          .filter((el) => el.type === "image" && el.fileId)
+          .map((el) => el.fileId as string),
+      );
+      const usedFiles: Record<string, BinaryFileData> = {};
+      for (const [id, file] of Object.entries(allFiles)) {
+        if (usedFileIds.has(id)) {
+          usedFiles[id] = file;
+        }
+      }
+
+      const data = JSON.stringify({
+        elements: typedElements,
+        files: usedFiles,
+      });
+      updateElements({ id: canvasId, data, userId: user.id });
+      lastElementSyncRef.current = Date.now();
+    };
 
     const unsubscribe = excalidrawAPI.onChange((elements) => {
       // Don't echo back remote updates we just applied
       if (isApplyingRemoteRef.current) return;
 
-      if (elementTimerRef.current) clearTimeout(elementTimerRef.current);
+      const now = Date.now();
+      const elapsed = now - lastElementSyncRef.current;
 
-      elementTimerRef.current = setTimeout(() => {
-        const typedElements = elements as ExcalidrawElement[];
-        const allFiles = excalidrawAPI.getFiles();
-
-        // Collect only files referenced by image elements
-        const usedFileIds = new Set(
-          typedElements
-            .filter((el) => el.type === "image" && el.fileId)
-            .map((el) => el.fileId as string),
-        );
-        const usedFiles: Record<string, BinaryFileData> = {};
-        for (const [id, file] of Object.entries(allFiles)) {
-          if (usedFileIds.has(id)) {
-            usedFiles[id] = file;
-          }
-        }
-
-        const data = JSON.stringify({
-          elements: typedElements,
-          files: usedFiles,
-        });
-        updateElements({ id: canvasId, data, userId: user.id });
-      }, ELEMENT_DEBOUNCE_MS);
+      if (elapsed >= ELEMENT_SYNC_MS) {
+        // Enough time has passed — send immediately
+        sendUpdate(elements);
+      } else {
+        // Schedule a trailing update
+        if (elementTimerRef.current) clearTimeout(elementTimerRef.current);
+        elementTimerRef.current = setTimeout(() => {
+          // Re-read current elements at send time
+          const currentElements = excalidrawAPI.getSceneElements();
+          sendUpdate(currentElements);
+        }, ELEMENT_SYNC_MS - elapsed);
+      }
     });
 
     return () => {
