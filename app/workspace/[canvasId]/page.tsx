@@ -25,11 +25,21 @@ export default function CanvasPage() {
   const canvasId = params.canvasId as Id<"canvases">;
   const userId = session?.user?.id ?? "";
 
-  // Use getForCollaboration instead of get — supports non-owner access
-  const canvas = useQuery(
+  // Lightweight query to load the canvas and determine collaboration state
+  const canvas = useQuery(api.canvases.get, userId ? { id: canvasId } : "skip");
+
+  const isOwner = !!canvas && canvas.ownerId === userId;
+  const collaborationEnabled = !!canvas?.collaborationEnabled;
+
+  // Only subscribe to the collaboration-aware query when collab is active
+  const collabCanvas = useQuery(
     api.canvases.getForCollaboration,
-    userId ? { id: canvasId, userId } : "skip",
+    collaborationEnabled && userId ? { id: canvasId, userId } : "skip",
   );
+
+  // When collaboration is on, use the collab query (has access control);
+  // otherwise use the basic canvas for the owner's solo path.
+  const resolvedCanvas = collaborationEnabled ? collabCanvas : canvas;
 
   // Keep the original update mutation for the owner's own save path
   const updateCanvas = useMutation(api.canvases.update);
@@ -37,8 +47,6 @@ export default function CanvasPage() {
   // Track the Excalidraw API instance for the collaboration hook
   const [excalidrawAPI, setExcalidrawAPI] =
     React.useState<ExcalidrawImperativeAPI | null>(null);
-
-  const collaborationEnabled = !!canvas?.collaborationEnabled;
 
   // Enable the collaboration hook when the canvas has collaboration turned on
   const { isCollaborating, collaborators, handlePointerUpdate } =
@@ -57,13 +65,13 @@ export default function CanvasPage() {
 
   // Set the browser tab title to the canvas name
   React.useEffect(() => {
-    if (canvas?.title) {
-      document.title = `Drawing - ${canvas.title}`;
+    if (resolvedCanvas?.title) {
+      document.title = `Drawing - ${resolvedCanvas.title}`;
     }
     return () => {
       document.title = "Drawing";
     };
-  }, [canvas?.title]);
+  }, [resolvedCanvas?.title]);
 
   // Owner save handler — only used when collaboration is NOT enabled
   // (when collaboration is enabled, the hook handles element sync)
@@ -83,7 +91,12 @@ export default function CanvasPage() {
     [],
   );
 
-  if (sessionPending || !session || canvas === undefined) {
+  if (
+    sessionPending ||
+    !session ||
+    canvas === undefined ||
+    (collaborationEnabled && collabCanvas === undefined)
+  ) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Spinner className="size-8" />
@@ -91,8 +104,8 @@ export default function CanvasPage() {
     );
   }
 
-  // Canvas not found OR collaboration disabled for non-owner
-  if (canvas === null) {
+  // Canvas not found, or non-owner trying to access with collaboration disabled
+  if (canvas === null || (!isOwner && !collaborationEnabled)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground text-sm">
@@ -111,7 +124,7 @@ export default function CanvasPage() {
 
   return (
     <ExcalidrawWrapper
-      initialData={canvas.data}
+      initialData={resolvedCanvas?.data}
       onSave={handleChange}
       onBack={() => router.push("/workspace")}
       isCollaborating={isCollaborating}

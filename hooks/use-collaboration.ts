@@ -54,6 +54,8 @@ export function useCollaboration({
   const userColor = useMemo(() => getUserColor(user.id), [user.id]);
 
   // --- Convex subscriptions ---
+  // Subscribe to the canvas data for reconciling remote changes.
+  // Only active when collaboration is enabled.
   const remoteCanvas = useQuery(
     api.canvases.getForCollaboration,
     enabled ? { id: canvasId, userId: user.id } : "skip",
