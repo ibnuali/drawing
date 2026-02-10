@@ -45,7 +45,7 @@ export function CreateCanvasDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>New canvas</AlertDialogTitle>
+          <AlertDialogTitle>New workspace</AlertDialogTitle>
           <AlertDialogDescription>
             Give your canvas a name to get started.
           </AlertDialogDescription>

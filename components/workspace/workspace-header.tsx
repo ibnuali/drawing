@@ -37,7 +37,7 @@ export function WorkspaceHeader({
       <div className="relative ml-4 max-w-xs flex-1">
         <Search className="text-muted-foreground pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2" />
         <Input
-          placeholder="Search canvases…"
+          placeholder="Search workspace..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           className="h-8 pl-8 text-xs"

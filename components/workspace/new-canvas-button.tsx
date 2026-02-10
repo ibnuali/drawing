@@ -15,7 +15,7 @@ export function NewCanvasButton({ onClick }: NewCanvasButtonProps) {
       <div className="bg-muted group-hover/new:bg-primary/10 flex size-10 items-center justify-center rounded-full transition-colors">
         <Plus className="size-5" />
       </div>
-      <span className="text-xs font-medium">New canvas</span>
+      <span className="text-xs font-medium">New workspace</span>
     </button>
   );
 }
