@@ -4,7 +4,9 @@ import { signOut, useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LogOut, Search, Plus } from "lucide-react";
-
+import Image from "next/image";
+import icon from "/icon.png";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 type WorkspaceHeaderProps = {
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -26,8 +28,8 @@ export function WorkspaceHeader({
   return (
     <header className="border-border/60 bg-background/80 sticky top-0 z-30 flex items-center gap-4 border-b px-6 py-3 backdrop-blur-sm">
       <div className="flex items-center gap-2.5">
-        <div className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-md text-xs font-bold">
-          D
+        <div className="flex size-7 items-center justify-center rounded-md text-xs font-bold">
+          <Image src="/icon.png" alt="" width={100} height={100} />
         </div>
         <span className="text-foreground text-sm font-semibold tracking-tight">
           Drawing
@@ -58,15 +60,18 @@ export function WorkspaceHeader({
             {initials}
           </div>
         )}
-
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={() => signOut()}
-          title="Sign out"
-        >
-          <LogOut />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button variant="ghost" size="icon-lg" onClick={() => signOut()}>
+                <LogOut />
+              </Button>
+            }
+          />
+          <TooltipContent>
+            <p>Logout</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </header>
   );
