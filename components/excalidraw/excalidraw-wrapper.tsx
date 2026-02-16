@@ -41,7 +41,7 @@ type ExcalidrawWrapperProps = {
   topRightUI?: React.ReactNode;
 };
 
-const SAVE_DEBOUNCE_MS = 2000;
+const SAVE_DEBOUNCE_MS = 1000;
 
 const ExcalidrawWrapper = React.forwardRef<
   ExcalidrawWrapperHandle,
@@ -200,7 +200,7 @@ const ExcalidrawWrapper = React.forwardRef<
               </TooltipContent>
             </Tooltip>
             {lastSavedAt && (
-              <span className="bg-secondary/80 text-white rounded-md px-2 py-1 text-xs shadow backdrop-blur-sm">
+              <span className="bg-secondary/80 text-primary rounded-md px-2 py-1 text-xs shadow backdrop-blur-sm">
                 Saved {lastSavedAt.toLocaleTimeString()}
               </span>
             )}

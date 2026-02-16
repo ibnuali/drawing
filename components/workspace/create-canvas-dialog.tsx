@@ -13,18 +13,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { useAtom } from "jotai";
+import { createCanvasDialogAtom } from "@/lib/workspace-atoms";
+import { useWorkspaceActions } from "@/hooks/use-workspace-actions";
 
-type CreateCanvasDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreate: (title: string) => void;
-};
-
-export function CreateCanvasDialog({
-  open,
-  onOpenChange,
-  onCreate,
-}: CreateCanvasDialogProps) {
+export function CreateCanvasDialog() {
+  const [open, setOpen] = useAtom(createCanvasDialogAtom);
+  const { handleCreate } = useWorkspaceActions();
   const [title, setTitle] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -37,12 +32,12 @@ export function CreateCanvasDialog({
 
   const handleSubmit = () => {
     const trimmed = title.trim() || "Untitled";
-    onCreate(trimmed);
-    onOpenChange(false);
+    handleCreate(trimmed);
+    setOpen(false);
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>New workspace</AlertDialogTitle>

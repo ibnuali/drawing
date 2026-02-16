@@ -284,3 +284,38 @@ export const listShared = query({
     return results.filter((r) => r.title.toLowerCase().includes(q));
   },
 });
+
+/**
+ * Assign a canvas to a category, or remove its category (set to uncategorized).
+ * Validates canvas ownership and category existence.
+ *
+ * Requirements: 4.1, 4.2, 4.3, 4.4
+ */
+export const assignCategory = mutation({
+  args: {
+    canvasId: v.id("canvases"),
+    categoryId: v.optional(v.id("categories")),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const canvas = await ctx.db.get(args.canvasId);
+    if (!canvas) throw new Error("Canvas not found");
+    if (canvas.ownerId !== identity.subject) {
+      throw new Error("Not authorized");
+    }
+
+    if (args.categoryId) {
+      const category = await ctx.db.get(args.categoryId);
+      if (!category) throw new Error("Category not found");
+      if (category.ownerId !== identity.subject) {
+        throw new Error("Not authorized");
+      }
+    }
+
+    await ctx.db.patch(args.canvasId, {
+      categoryId: args.categoryId ?? undefined,
+    });
+  },
+});

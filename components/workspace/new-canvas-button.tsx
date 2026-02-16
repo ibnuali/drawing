@@ -1,12 +1,12 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import { useSetAtom } from "jotai";
+import { createCanvasDialogAtom } from "@/lib/workspace-atoms";
 
-type NewCanvasButtonProps = {
-  onClick: () => void;
-};
-
-export function NewCanvasButton({ onClick }: NewCanvasButtonProps) {
+export function NewCanvasButton() {
+  const setOpen = useSetAtom(createCanvasDialogAtom);
+  const onClick = () => setOpen(true);
   return (
     <button
       onClick={onClick}

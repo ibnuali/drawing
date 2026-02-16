@@ -11,7 +11,20 @@ export default defineSchema({
     linkAccessEnabled: v.optional(v.boolean()),
     linkAccessLevel: v.optional(v.union(v.literal("editor"), v.literal("viewer"))),
     updatedAt: v.number(),
-  }).index("by_owner", ["ownerId"]),
+    categoryId: v.optional(v.id("categories")),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_category", ["categoryId"]),
+
+  categories: defineTable({
+    name: v.string(),
+    ownerId: v.string(),
+    order: v.number(),
+    isCollapsed: v.optional(v.boolean()),
+  })
+    .index("by_owner", ["ownerId"])
+    .index("by_owner_order", ["ownerId", "order"])
+    .index("by_owner_name", ["ownerId", "name"]),
 
   access: defineTable({
     canvasId: v.id("canvases"),

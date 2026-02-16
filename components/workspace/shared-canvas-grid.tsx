@@ -2,6 +2,7 @@
 
 import type { Id } from "@/convex/_generated/dataModel";
 import { CanvasCard } from "./canvas-card";
+import type { CanvasActions } from "@/lib/workspace-atoms";
 
 type SharedCanvasResult = {
   _id: Id<"canvases">;
@@ -16,10 +17,10 @@ type SharedCanvasResult = {
 
 type SharedCanvasGridProps = {
   canvases: SharedCanvasResult[];
-  onOpen: (id: Id<"canvases">) => void;
+  actions: CanvasActions;
 };
 
-export function SharedCanvasGrid({ canvases, onOpen }: SharedCanvasGridProps) {
+export function SharedCanvasGrid({ canvases, actions }: SharedCanvasGridProps) {
   if (canvases.length === 0) return null;
 
   return (
@@ -41,7 +42,7 @@ export function SharedCanvasGrid({ canvases, onOpen }: SharedCanvasGridProps) {
               ownerId: canvas.ownerId,
               _creationTime: 0,
             } as any}
-            onClick={() => onOpen(canvas._id)}
+            actions={actions}
             isShared
             ownerName={canvas.ownerName}
             accessLevel={canvas.accessLevel}
