@@ -8,6 +8,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import {
   MoreHorizontal,
@@ -17,7 +20,7 @@ import {
   Lock,
   Link,
   Users,
-  UserX,
+  FolderInput,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -31,23 +34,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import type { CanvasActions, CollaboratorInfo } from "@/lib/workspace-atoms";
 
-type CollaboratorInfo = {
-  count: number;
-  names: string[];
+type CategoryOption = {
+  _id: string;
+  name: string;
 };
 
 type CanvasCardProps = {
   canvas: Doc<"canvases">;
-  onClick: () => void;
-  onDelete?: (e: React.MouseEvent) => void;
-  onRename?: () => void;
-  onTogglePublic?: () => void;
-  onCopyCollabLink?: () => void;
+  actions?: CanvasActions;
   collaborators?: CollaboratorInfo;
   isShared?: boolean;
   ownerName?: string;
   accessLevel?: "editor" | "viewer";
+  categories?: CategoryOption[];
 };
 
 function formatRelativeDate(timestamp: number): string {
@@ -69,15 +70,12 @@ function formatRelativeDate(timestamp: number): string {
 
 export function CanvasCard({
   canvas,
-  onClick,
-  onDelete,
-  onRename,
-  onTogglePublic,
-  onCopyCollabLink,
+  actions,
   collaborators,
   isShared,
   ownerName,
   accessLevel,
+  categories,
 }: CanvasCardProps) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
@@ -98,7 +96,7 @@ export function CanvasCard({
         "group/canvas border-border/60 hover:border-border relative flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-transparent transition-all hover:shadow-lg",
         menuOpen && "border-border shadow-lg",
       )}
-      onClick={onClick}
+      onClick={() => actions?.onOpen(canvas._id)}
     >
       {/* Thumbnail area */}
       <div className="bg-muted/40 relative flex h-36 items-center justify-center overflow-hidden">
@@ -196,7 +194,7 @@ export function CanvasCard({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRename?.();
+                  actions?.onRename(canvas._id);
                 }}
               >
                 <Pencil />
@@ -205,7 +203,7 @@ export function CanvasCard({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  onTogglePublic?.();
+                  actions?.onTogglePublic(canvas._id);
                 }}
               >
                 {isPublic ? <Lock /> : <Globe />}
@@ -217,18 +215,52 @@ export function CanvasCard({
                   Copy public link
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator />
            
               {isCollabEnabled && (
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
-                    onCopyCollabLink?.();
+                    actions?.onCopyCollabLink(canvas._id);
                   }}
                 >
                   <Link />
                   Copy collab link
                 </DropdownMenuItem>
+              )}
+              {actions && categories && categories.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FolderInput className="size-4" />
+                      Move to category
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          actions.onMoveToCategory(canvas._id, undefined);
+                        }}
+                      >
+                        Uncategorized
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {categories.map((cat) => (
+                        <DropdownMenuItem
+                          key={cat._id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            actions.onMoveToCategory(canvas._id, cat._id);
+                          }}
+                        >
+                          {cat.name}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -293,7 +325,7 @@ export function CanvasCard({
               variant="destructive"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete?.(pendingDeleteEvent.current ?? e);
+                actions?.onDelete(pendingDeleteEvent.current ?? e, canvas._id);
                 setDeleteOpen(false);
               }}
             >

@@ -12,16 +12,6 @@ import { useCollaboration } from "@/hooks/use-collaboration";
 import { ShareButton } from "@/components/workspace/share-button";
 import dynamic from "next/dynamic";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
 
 const ExcalidrawWrapper = dynamic(
   async () =>
@@ -41,10 +31,6 @@ export default function CanvasPage() {
     string | undefined
   >(undefined);
   const [hasLoaded, setHasLoaded] = React.useState(false);
-
-  // Unsaved-changes dialog state
-  const [showLeaveDialog, setShowLeaveDialog] = React.useState(false);
-  const pendingNavigationRef = React.useRef<string | null>(null);
 
   const wrapperRef = React.useRef<ExcalidrawWrapperHandle>(null);
 
@@ -128,73 +114,28 @@ export default function CanvasPage() {
     [],
   );
 
-  // --- Navigation guard ---
-  // Determines if we should block navigation (non-collab owner with pending save)
-  const shouldBlock = React.useCallback(() => {
-    if (collaborationEnabled || !isOwner || isViewer) return false;
-    const handle = wrapperRef.current;
-    if (!handle) return false;
-
-    // No pending debounced save — nothing to worry about
-    if (!handle.hasPendingChanges()) return false;
-
-    // Never saved this session — canvas hasn't been modified
-    const lastSaved = handle.getLastSavedAt();
-    if (!lastSaved) return false;
-
-    return true;
-  }, [collaborationEnabled, isOwner, isViewer]);
-
-  // beforeunload — browser native prompt for tab close / hard refresh
+  // beforeunload — flush pending save on tab close / hard refresh
   React.useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (shouldBlock()) {
-        e.preventDefault();
-      }
+    const handler = () => {
+      wrapperRef.current?.flushSave();
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [shouldBlock]);
+  }, []);
 
-  // popstate — intercept browser back/forward
+  // popstate — flush pending save on browser back/forward, then allow navigation
   React.useEffect(() => {
     const handler = () => {
-      if (shouldBlock()) {
-        // Push the current URL back so we stay on the page
-        window.history.pushState(null, "", window.location.href);
-        pendingNavigationRef.current = "/workspace";
-        setShowLeaveDialog(true);
-      }
+      wrapperRef.current?.flushSave();
     };
-    // Push an extra history entry so we can catch the first back press
-    window.history.pushState(null, "", window.location.href);
     window.addEventListener("popstate", handler);
     return () => window.removeEventListener("popstate", handler);
-  }, [shouldBlock]);
+  }, []);
 
-  // Back button click handler — check for unsaved changes first
+  // Back button click handler — flush any pending save and navigate
   const handleBack = React.useCallback(() => {
-    if (shouldBlock()) {
-      pendingNavigationRef.current = "/workspace";
-      setShowLeaveDialog(true);
-    } else {
-      router.push("/workspace");
-    }
-  }, [shouldBlock, router]);
-
-  const handleSaveAndLeave = React.useCallback(() => {
     wrapperRef.current?.flushSave();
-    setShowLeaveDialog(false);
-    const dest = pendingNavigationRef.current ?? "/workspace";
-    pendingNavigationRef.current = null;
-    router.push(dest);
-  }, [router]);
-
-  const handleLeaveWithoutSaving = React.useCallback(() => {
-    setShowLeaveDialog(false);
-    const dest = pendingNavigationRef.current ?? "/workspace";
-    pendingNavigationRef.current = null;
-    router.push(dest);
+    router.push("/workspace");
   }, [router]);
 
   // Derive viewMode once for reuse
@@ -250,24 +191,6 @@ export default function CanvasPage() {
           <ShareButton canvasId={canvasId} isOwner={isOwner} userId={userId} />
         }
       />
-      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog }>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
-            <AlertDialogDescription>
-              You have unsaved changes. Would you like to save before leaving?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleLeaveWithoutSaving}>
-              Leave without saving
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={handleSaveAndLeave}>
-              Save &amp; Leave
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

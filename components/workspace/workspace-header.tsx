@@ -7,16 +7,12 @@ import { LogOut, Search } from "lucide-react";
 import Image from "next/image";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { ThemeToggle } from "@/components/theme-toggle";
-type WorkspaceHeaderProps = {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-};
+import { useAtom } from "jotai";
+import { searchQueryAtom } from "@/lib/workspace-atoms";
 
-export function WorkspaceHeader({
-  searchQuery,
-  onSearchChange,
-}: WorkspaceHeaderProps) {
+export function WorkspaceHeader() {
   const { data: session, isPending } = useSession();
+  const [searchQuery, onSearchChange] = useAtom(searchQueryAtom);
 
   const initials = session?.user.name
     .split(" ")
@@ -44,6 +40,7 @@ export function WorkspaceHeader({
           onChange={(e) => onSearchChange(e.target.value)}
           className="h-8 pl-8 text-xs"
         />
+
       </div>
 
       <div className="ml-auto flex items-center gap-2">

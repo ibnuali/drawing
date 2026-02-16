@@ -1,34 +1,27 @@
 "use client";
 
-import type { Doc, Id } from "@/convex/_generated/dataModel";
+import type { Doc } from "@/convex/_generated/dataModel";
 import { CanvasCard } from "./canvas-card";
 import { NewCanvasButton } from "./new-canvas-button";
+import type { CanvasActions, CollaboratorInfo } from "@/lib/workspace-atoms";
 
-type CollaboratorInfo = {
-  count: number;
-  names: string[];
+type CategoryOption = {
+  _id: string;
+  name: string;
 };
 
 type CanvasGridProps = {
   canvases: Doc<"canvases">[] | undefined;
-  onCreate: () => void;
-  onOpen: (id: Id<"canvases">) => void;
-  onDelete: (e: React.MouseEvent, id: Id<"canvases">) => void;
-  onRename: (id: Id<"canvases">) => void;
-  onTogglePublic: (id: Id<"canvases">) => void;
-  onCopyCollabLink: (id: Id<"canvases">) => void;
+  actions: CanvasActions;
   activeCollaborators?: Record<string, CollaboratorInfo>;
+  categories?: CategoryOption[];
 };
 
 export function CanvasGrid({
   canvases,
-  onCreate,
-  onOpen,
-  onDelete,
-  onRename,
-  onTogglePublic,
-  onCopyCollabLink,
+  actions,
   activeCollaborators,
+  categories,
 }: CanvasGridProps) {
   const isLoading = canvases === undefined;
 
@@ -39,7 +32,7 @@ export function CanvasGrid({
       </p>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        <NewCanvasButton onClick={onCreate} />
+        <NewCanvasButton />
 
         {isLoading &&
           Array.from({ length: 8 }).map((_, i) => (
@@ -59,12 +52,9 @@ export function CanvasGrid({
           <CanvasCard
             key={canvas._id}
             canvas={canvas}
-            onClick={() => onOpen(canvas._id)}
-            onDelete={(e) => onDelete(e, canvas._id)}
-            onRename={() => onRename(canvas._id)}
-            onTogglePublic={() => onTogglePublic(canvas._id)}
-            onCopyCollabLink={() => onCopyCollabLink(canvas._id)}
+            actions={actions}
             collaborators={activeCollaborators?.[canvas._id]}
+            categories={categories}
           />
         ))}
       </div>

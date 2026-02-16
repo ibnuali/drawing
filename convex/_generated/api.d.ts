@@ -11,6 +11,7 @@
 import type * as access from "../access.js";
 import type * as auth from "../auth.js";
 import type * as canvases from "../canvases.js";
+import type * as categories from "../categories.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as presence from "../presence.js";
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   access: typeof access;
   auth: typeof auth;
   canvases: typeof canvases;
+  categories: typeof categories;
   crons: typeof crons;
   http: typeof http;
   presence: typeof presence;

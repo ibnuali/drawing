@@ -12,20 +12,18 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { useAtom, useAtomValue } from "jotai";
+import { renameCanvasTargetAtom, canvasesAtom } from "@/lib/workspace-atoms";
+import { useWorkspaceActions } from "@/hooks/use-workspace-actions";
 
-type RenameCanvasDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  currentTitle: string;
-  onRename: (newTitle: string) => void;
-};
+export function RenameCanvasDialog() {
+  const [renameTarget, setRenameTarget] = useAtom(renameCanvasTargetAtom);
+  const canvases = useAtomValue(canvasesAtom);
+  const { handleRenameConfirm } = useWorkspaceActions();
 
-export function RenameCanvasDialog({
-  open,
-  onOpenChange,
-  currentTitle,
-  onRename,
-}: RenameCanvasDialogProps) {
+  const open = renameTarget !== null;
+  const currentTitle =
+    canvases?.find((c) => c._id === renameTarget)?.title ?? "";
   const [title, setTitle] = React.useState(currentTitle);
 
   React.useEffect(() => {
@@ -34,14 +32,14 @@ export function RenameCanvasDialog({
 
   const handleSubmit = () => {
     const trimmed = title.trim();
-    if (trimmed && trimmed !== currentTitle) {
-      onRename(trimmed);
+    if (trimmed && trimmed !== currentTitle && renameTarget) {
+      handleRenameConfirm(trimmed, renameTarget);
     }
-    onOpenChange(false);
+    setRenameTarget(null);
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
+    <AlertDialog open={open} onOpenChange={(o) => { if (!o) setRenameTarget(null); }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Rename canvas</AlertDialogTitle>
@@ -52,9 +50,7 @@ export function RenameCanvasDialog({
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSubmit();
-          }}
+          onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
           placeholder="Canvas name"
           autoFocus
         />
