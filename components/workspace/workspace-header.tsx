@@ -3,10 +3,10 @@
 import { signOut, useSession } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search, Plus } from "lucide-react";
+import { LogOut, Search } from "lucide-react";
 import Image from "next/image";
-import icon from "/icon.png";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import { ThemeToggle } from "@/components/theme-toggle";
 type WorkspaceHeaderProps = {
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -47,6 +47,7 @@ export function WorkspaceHeader({
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <ThemeToggle />
         <div className="bg-border mx-1 h-5 w-px" />
 
         {session?.user.image ? (

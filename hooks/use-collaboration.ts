@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { SaveTracker } from "@/lib/save-tracker";
 import type {
   ExcalidrawImperativeAPI,
   Collaborator,
@@ -77,11 +78,15 @@ export function useCollaboration({
   const lastPointerTimeRef = useRef(0);
   const lastElementSyncRef = useRef(0);
   const lastRemoteDataRef = useRef<string | undefined>(undefined);
+  const lastKnownVersionRef = useRef<number | undefined>(undefined);
   const isApplyingRemoteRef = useRef(false);
+  const saveTrackerRef = useRef(new SaveTracker());
 
   // --- Mount/unmount: insert and remove presence ---
   useEffect(() => {
     if (!enabled) return;
+
+    saveTrackerRef.current.reset();
 
     updatePresence({
       canvasId,
@@ -100,9 +105,17 @@ export function useCollaboration({
   useEffect(() => {
     if (!enabled || !excalidrawAPI || !remoteCanvas?.data) return;
 
+    // Track the version from the remote canvas
+    if (remoteCanvas.updatedAt !== undefined) {
+      lastKnownVersionRef.current = remoteCanvas.updatedAt;
+    }
+
     // Skip if we already processed this exact data string
     if (remoteCanvas.data === lastRemoteDataRef.current) return;
     lastRemoteDataRef.current = remoteCanvas.data;
+
+    // Reset SaveTracker to the incoming remote data so we don't re-send it
+    saveTrackerRef.current.reset(remoteCanvas.data);
 
     // Guard against re-entrant updates (our own writes echoing back)
     if (isApplyingRemoteRef.current) return;
@@ -138,7 +151,7 @@ export function useCollaboration({
     } catch {
       // Ignore deserialization errors from malformed data
     }
-  }, [enabled, excalidrawAPI, remoteCanvas?.data]);
+  }, [enabled, excalidrawAPI, remoteCanvas?.data, remoteCanvas?.updatedAt]);
 
   // --- Build collaborators map from presence records ---
   const collaborators = useMemo<Map<SocketId, Collaborator>>(() => {
@@ -225,7 +238,7 @@ export function useCollaboration({
   useEffect(() => {
     if (!enabled || !excalidrawAPI) return;
 
-    const sendUpdate = (elements: readonly ExcalidrawElement[]) => {
+    const sendUpdate = async (elements: readonly ExcalidrawElement[]) => {
       const typedElements = elements as ExcalidrawElement[];
       const allFiles = excalidrawAPI.getFiles();
 
@@ -246,7 +259,32 @@ export function useCollaboration({
         elements: typedElements,
         files: usedFiles,
       });
-      updateElements({ id: canvasId, data, userId: user.id });
+
+      // Skip mutation if data hasn't changed since last save
+      if (!saveTrackerRef.current.markChange(data)) {
+        lastElementSyncRef.current = Date.now();
+        return;
+      }
+
+      try {
+        const result = await updateElements({
+          id: canvasId,
+          data,
+          userId: user.id,
+          expectedVersion: lastKnownVersionRef.current,
+        });
+
+        // Update our version tracker on successful write
+        if (result?.success && result.currentVersion !== undefined) {
+          lastKnownVersionRef.current = result.currentVersion;
+          saveTrackerRef.current.confirmSave(data);
+        }
+        // On conflict (success: false), do not call confirmSave — dirty flag stays true
+      } catch (error) {
+        // Network or auth errors — dirty flag stays true, will retry on next change
+        console.warn("Failed to sync elements:", error);
+      }
+
       lastElementSyncRef.current = Date.now();
     };
 

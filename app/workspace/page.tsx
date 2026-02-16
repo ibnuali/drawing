@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { WorkspaceHeader } from "@/components/workspace/workspace-header";
 import { CanvasGrid } from "@/components/workspace/canvas-grid";
+import { SharedCanvasGrid } from "@/components/workspace/shared-canvas-grid";
 import { CreateCanvasDialog } from "@/components/workspace/create-canvas-dialog";
 import { RenameCanvasDialog } from "@/components/workspace/rename-canvas-dialog";
 import { Spinner } from "@/components/ui/spinner";
@@ -30,11 +31,19 @@ export default function WorkspacePage() {
         }
       : "skip",
   );
+  const sharedCanvases = useQuery(
+    api.canvases.listShared,
+    session?.user
+      ? {
+          userId: session.user.id,
+          search: searchQuery.trim() || undefined,
+        }
+      : "skip",
+  );
   const createCanvas = useMutation(api.canvases.create);
   const removeCanvas = useMutation(api.canvases.remove);
   const renameCanvas = useMutation(api.canvases.rename);
   const togglePublic = useMutation(api.canvases.togglePublic);
-  const toggleCollaboration = useMutation(api.canvases.toggleCollaboration);
 
   const canvasIds = canvases?.map((c) => c._id);
   const activeCollaborators = useQuery(
@@ -85,10 +94,6 @@ export default function WorkspacePage() {
     togglePublic({ id });
   };
 
-  const handleToggleCollaboration = (id: Id<"canvases">) => {
-    toggleCollaboration({ id, userId: session.user.id });
-  };
-
   const handleCopyCollabLink = (id: Id<"canvases">) => {
     navigator.clipboard.writeText(`${window.location.origin}/workspace/${id}`);
   };
@@ -106,10 +111,15 @@ export default function WorkspacePage() {
         onDelete={handleDelete}
         onRename={handleRename}
         onTogglePublic={handleTogglePublic}
-        onToggleCollaboration={handleToggleCollaboration}
         onCopyCollabLink={handleCopyCollabLink}
         activeCollaborators={activeCollaborators ?? undefined}
       />
+      {sharedCanvases && (
+        <SharedCanvasGrid
+          canvases={sharedCanvases}
+          onOpen={(id) => router.push(`/workspace/${id}`)}
+        />
+      )}
       <CreateCanvasDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}

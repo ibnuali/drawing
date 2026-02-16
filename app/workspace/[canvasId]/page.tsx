@@ -7,9 +7,21 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw";
+import type { ExcalidrawWrapperHandle } from "@/components/excalidraw/excalidraw-wrapper";
 import { useCollaboration } from "@/hooks/use-collaboration";
+import { ShareButton } from "@/components/workspace/share-button";
 import dynamic from "next/dynamic";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
 const ExcalidrawWrapper = dynamic(
   async () =>
@@ -25,29 +37,58 @@ export default function CanvasPage() {
   const canvasId = params.canvasId as Id<"canvases">;
   const userId = session?.user?.id ?? "";
 
-  // Lightweight query to load the canvas and determine collaboration state
-  const canvas = useQuery(api.canvases.get, userId ? { id: canvasId } : "skip");
-  const isOwner = !!canvas && canvas.ownerId === userId;
-  const collaborationEnabled = !!canvas?.collaborationEnabled;
+  const [initialCanvasData, setInitialCanvasData] = React.useState<
+    string | undefined
+  >(undefined);
+  const [hasLoaded, setHasLoaded] = React.useState(false);
 
-  // Only subscribe to the collaboration-aware query when collab is active
-  const collabCanvas = useQuery(
-    api.canvases.getForCollaboration,
-    collaborationEnabled && userId ? { id: canvasId, userId } : "skip",
+  // Unsaved-changes dialog state
+  const [showLeaveDialog, setShowLeaveDialog] = React.useState(false);
+  const pendingNavigationRef = React.useRef<string | null>(null);
+
+  const wrapperRef = React.useRef<ExcalidrawWrapperHandle>(null);
+
+  const canvas = useQuery(
+    api.canvases.get,
+    userId ? { id: canvasId } : "skip",
   );
 
-  // When collaboration is on, use the collab query (has access control);
-  // otherwise use the basic canvas for the owner's solo path.
-  const resolvedCanvas = collaborationEnabled ? collabCanvas : canvas;
+  React.useEffect(() => {
+    if (canvas !== undefined && !hasLoaded) {
+      setInitialCanvasData(canvas?.data);
+      setHasLoaded(true);
+    }
+  }, [canvas, hasLoaded]);
 
-  // Keep the original update mutation for the owner's own save path
+  const effectiveCanvas = canvas;
+  const isOwner = !!effectiveCanvas && effectiveCanvas.ownerId === userId;
+  const collaborationEnabled = !!effectiveCanvas?.collaborationEnabled;
+
+  const accessRecord = useQuery(
+    api.access.getCollaborators,
+    !isOwner && userId && effectiveCanvas ? { canvasId } : "skip",
+  );
+
+  const hasExplicitAccess = !!accessRecord?.some(
+    (c) => c.userId === userId && c.accessLevel !== "owner",
+  );
+  const hasLinkAccess = !!effectiveCanvas?.linkAccessEnabled;
+  const hasAccess =
+    isOwner || hasExplicitAccess || hasLinkAccess || collaborationEnabled;
+
+  const collabCanvas = useQuery(
+    api.canvases.getForCollaboration,
+    hasAccess && !isOwner && userId ? { id: canvasId, userId } : "skip",
+  );
+
+  const resolvedCanvas = !isOwner && hasAccess ? collabCanvas : effectiveCanvas;
+  const isViewer = !isOwner && collabCanvas?.userAccessLevel === "viewer";
+
   const updateCanvas = useMutation(api.canvases.update);
 
-  // Track the Excalidraw API instance for the collaboration hook
   const [excalidrawAPI, setExcalidrawAPI] =
     React.useState<ExcalidrawImperativeAPI | null>(null);
 
-  // Enable the collaboration hook when the canvas has collaboration turned on
   const { isCollaborating, collaborators, handlePointerUpdate } =
     useCollaboration({
       canvasId,
@@ -62,7 +103,6 @@ export default function CanvasPage() {
     }
   }, [sessionPending, session, router]);
 
-  // Set the browser tab title to the canvas name
   React.useEffect(() => {
     if (resolvedCanvas?.title) {
       document.title = `Drawing - ${resolvedCanvas.title}`;
@@ -72,15 +112,13 @@ export default function CanvasPage() {
     };
   }, [resolvedCanvas?.title]);
 
-  // Owner save handler — only used when collaboration is NOT enabled
-  // (when collaboration is enabled, the hook handles element sync)
   const handleChange = React.useCallback(
     (data: string) => {
-      if (!collaborationEnabled) {
+      if (!collaborationEnabled && isOwner) {
         updateCanvas({ id: canvasId, data });
       }
     },
-    [canvasId, updateCanvas, collaborationEnabled],
+    [canvasId, updateCanvas, collaborationEnabled, isOwner],
   );
 
   const handleExcalidrawAPI = React.useCallback(
@@ -90,11 +128,83 @@ export default function CanvasPage() {
     [],
   );
 
+  // --- Navigation guard ---
+  // Determines if we should block navigation (non-collab owner with pending save)
+  const shouldBlock = React.useCallback(() => {
+    if (collaborationEnabled || !isOwner || isViewer) return false;
+    const handle = wrapperRef.current;
+    if (!handle) return false;
+
+    // No pending debounced save — nothing to worry about
+    if (!handle.hasPendingChanges()) return false;
+
+    // Never saved this session — canvas hasn't been modified
+    const lastSaved = handle.getLastSavedAt();
+    if (!lastSaved) return false;
+
+    return true;
+  }, [collaborationEnabled, isOwner, isViewer]);
+
+  // beforeunload — browser native prompt for tab close / hard refresh
+  React.useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (shouldBlock()) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [shouldBlock]);
+
+  // popstate — intercept browser back/forward
+  React.useEffect(() => {
+    const handler = () => {
+      if (shouldBlock()) {
+        // Push the current URL back so we stay on the page
+        window.history.pushState(null, "", window.location.href);
+        pendingNavigationRef.current = "/workspace";
+        setShowLeaveDialog(true);
+      }
+    };
+    // Push an extra history entry so we can catch the first back press
+    window.history.pushState(null, "", window.location.href);
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, [shouldBlock]);
+
+  // Back button click handler — check for unsaved changes first
+  const handleBack = React.useCallback(() => {
+    if (shouldBlock()) {
+      pendingNavigationRef.current = "/workspace";
+      setShowLeaveDialog(true);
+    } else {
+      router.push("/workspace");
+    }
+  }, [shouldBlock, router]);
+
+  const handleSaveAndLeave = React.useCallback(() => {
+    wrapperRef.current?.flushSave();
+    setShowLeaveDialog(false);
+    const dest = pendingNavigationRef.current ?? "/workspace";
+    pendingNavigationRef.current = null;
+    router.push(dest);
+  }, [router]);
+
+  const handleLeaveWithoutSaving = React.useCallback(() => {
+    setShowLeaveDialog(false);
+    const dest = pendingNavigationRef.current ?? "/workspace";
+    pendingNavigationRef.current = null;
+    router.push(dest);
+  }, [router]);
+
+  // Derive viewMode once for reuse
+  const viewModeActive = isViewer;
+
   if (
     sessionPending ||
     !session ||
-    canvas === undefined ||
-    (collaborationEnabled && collabCanvas === undefined)
+    !hasLoaded ||
+    (!isOwner && hasAccess && collabCanvas === undefined)
   ) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -103,8 +213,7 @@ export default function CanvasPage() {
     );
   }
 
-  // Canvas not found, or non-owner trying to access with collaboration disabled
-  if (canvas === null || (!isOwner && !collaborationEnabled)) {
+  if (effectiveCanvas === null || !hasAccess) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4">
         <p className="text-muted-foreground text-sm">
@@ -121,15 +230,44 @@ export default function CanvasPage() {
     );
   }
 
+  const initialDataForEditor = isOwner
+    ? initialCanvasData
+    : resolvedCanvas?.data;
+
   return (
-    <ExcalidrawWrapper
-      initialData={resolvedCanvas?.data}
-      onSave={handleChange}
-      onBack={() => router.push("/workspace")}
-      isCollaborating={isCollaborating}
-      collaborators={collaborators}
-      onPointerUpdate={handlePointerUpdate}
-      onExcalidrawAPI={handleExcalidrawAPI}
-    />
+    <>
+      <ExcalidrawWrapper
+        ref={wrapperRef}
+        initialData={initialDataForEditor}
+        onSave={handleChange}
+        onBack={handleBack}
+        viewMode={viewModeActive}
+        isCollaborating={isCollaborating}
+        collaborators={collaborators}
+        onPointerUpdate={handlePointerUpdate}
+        onExcalidrawAPI={handleExcalidrawAPI}
+        topRightUI={
+          <ShareButton canvasId={canvasId} isOwner={isOwner} userId={userId} />
+        }
+      />
+      <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog }>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Would you like to save before leaving?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleLeaveWithoutSaving}>
+              Leave without saving
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleSaveAndLeave}>
+              Save &amp; Leave
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

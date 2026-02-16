@@ -8,8 +8,31 @@ export default defineSchema({
     data: v.optional(v.string()),
     isPublic: v.optional(v.boolean()),
     collaborationEnabled: v.optional(v.boolean()),
+    linkAccessEnabled: v.optional(v.boolean()),
+    linkAccessLevel: v.optional(v.union(v.literal("editor"), v.literal("viewer"))),
     updatedAt: v.number(),
   }).index("by_owner", ["ownerId"]),
+
+  access: defineTable({
+    canvasId: v.id("canvases"),
+    userId: v.string(),
+    accessLevel: v.union(v.literal("editor"), v.literal("viewer")),
+    grantedAt: v.number(),
+    grantedBy: v.string(),
+  })
+    .index("by_canvas", ["canvasId"])
+    .index("by_canvas_user", ["canvasId", "userId"])
+    .index("by_user", ["userId"]),
+
+  users: defineTable({
+    clerkId: v.string(),
+    email: v.string(),
+    name: v.string(),
+    avatarUrl: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_clerk_id", ["clerkId"])
+    .index("by_email", ["email"]),
 
   presence: defineTable({
     canvasId: v.id("canvases"),

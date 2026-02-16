@@ -30,6 +30,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 type CollaboratorInfo = {
   count: number;
@@ -39,12 +40,14 @@ type CollaboratorInfo = {
 type CanvasCardProps = {
   canvas: Doc<"canvases">;
   onClick: () => void;
-  onDelete: (e: React.MouseEvent) => void;
-  onRename: () => void;
-  onTogglePublic: () => void;
-  onToggleCollaboration: () => void;
-  onCopyCollabLink: () => void;
+  onDelete?: (e: React.MouseEvent) => void;
+  onRename?: () => void;
+  onTogglePublic?: () => void;
+  onCopyCollabLink?: () => void;
   collaborators?: CollaboratorInfo;
+  isShared?: boolean;
+  ownerName?: string;
+  accessLevel?: "editor" | "viewer";
 };
 
 function formatRelativeDate(timestamp: number): string {
@@ -70,9 +73,11 @@ export function CanvasCard({
   onDelete,
   onRename,
   onTogglePublic,
-  onToggleCollaboration,
   onCopyCollabLink,
   collaborators,
+  isShared,
+  ownerName,
+  accessLevel,
 }: CanvasCardProps) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
@@ -173,6 +178,7 @@ export function CanvasCard({
         )}
 
         {/* Hover actions */}
+        {!isShared && (
         <div
           className={cn(
             "absolute right-2 top-2 opacity-0 transition-opacity group-hover/canvas:opacity-100",
@@ -190,7 +196,7 @@ export function CanvasCard({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRename();
+                  onRename?.();
                 }}
               >
                 <Pencil />
@@ -199,7 +205,7 @@ export function CanvasCard({
               <DropdownMenuItem
                 onClick={(e) => {
                   e.stopPropagation();
-                  onTogglePublic();
+                  onTogglePublic?.();
                 }}
               >
                 {isPublic ? <Lock /> : <Globe />}
@@ -212,20 +218,12 @@ export function CanvasCard({
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleCollaboration();
-                }}
-              >
-                {isCollabEnabled ? <UserX /> : <Users />}
-                {isCollabEnabled ? "Stop collaborating" : "Collaborate"}
-              </DropdownMenuItem>
+           
               {isCollabEnabled && (
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
-                    onCopyCollabLink();
+                    onCopyCollabLink?.();
                   }}
                 >
                   <Link />
@@ -248,6 +246,7 @@ export function CanvasCard({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
       </div>
 
       {/* Info */}
@@ -258,9 +257,27 @@ export function CanvasCard({
         <span className="text-muted-foreground text-xs">
           Edited {formatRelativeDate(canvas.updatedAt)}
         </span>
+        {isShared && (
+          <div className="mt-1 flex items-center gap-1.5">
+            {ownerName && (
+              <Badge variant="secondary" className="text-[10px] h-4 px-1.5">
+                By {ownerName}
+              </Badge>
+            )}
+            {accessLevel && (
+              <Badge
+                variant={accessLevel === "editor" ? "default" : "outline"}
+                className="text-[10px] h-4 px-1.5 capitalize"
+              >
+                {accessLevel}
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Delete confirmation */}
+      {!isShared && (
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
@@ -276,7 +293,7 @@ export function CanvasCard({
               variant="destructive"
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete(pendingDeleteEvent.current ?? e);
+                onDelete?.(pendingDeleteEvent.current ?? e);
                 setDeleteOpen(false);
               }}
             >
@@ -285,6 +302,7 @@ export function CanvasCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      )}
     </div>
   );
 }

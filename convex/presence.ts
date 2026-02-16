@@ -106,15 +106,33 @@ export const purgeStale = internalMutation({
   args: {},
   handler: async (ctx) => {
     const cutoff = Date.now() - PURGE_THRESHOLD_MS;
+
+    // 1. Purge stale presence on collaborative canvases (time-based cleanup)
     const staleRecords = await ctx.db
       .query("presence")
       .filter((q) => q.lt(q.field("lastSeen"), cutoff))
       .collect();
 
+    let deleted = 0;
     for (const record of staleRecords) {
-      await ctx.db.delete(record._id);
+      const canvas = await ctx.db.get(record.canvasId);
+      if (canvas?.collaborationEnabled) {
+        await ctx.db.delete(record._id);
+        deleted++;
+      }
     }
 
-    return { deleted: staleRecords.length };
+    // 2. Purge ALL presence on non-collaborative / deleted canvases
+    //    (these records are orphaned and shouldn't exist)
+    const allPresence = await ctx.db.query("presence").collect();
+    for (const record of allPresence) {
+      const canvas = await ctx.db.get(record.canvasId);
+      if (!canvas || !canvas.collaborationEnabled) {
+        await ctx.db.delete(record._id);
+        deleted++;
+      }
+    }
+
+    return { deleted };
   },
 });
