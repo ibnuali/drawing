@@ -2,7 +2,6 @@
 
 import type { Doc } from "@/convex/_generated/dataModel";
 import { CanvasCard } from "./canvas-card";
-import { NewCanvasButton } from "./new-canvas-button";
 import type { CanvasActions, CollaboratorInfo } from "@/lib/workspace-atoms";
 
 type CategoryOption = {
@@ -32,8 +31,6 @@ export function CanvasGrid({
       </p>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        <NewCanvasButton />
-
         {isLoading &&
           Array.from({ length: 8 }).map((_, i) => (
             <div

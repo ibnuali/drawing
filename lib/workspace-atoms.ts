@@ -1,12 +1,15 @@
 import { atom } from "jotai";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
-import type { SidebarView } from "@/components/workspace/workspace-sidebar";
+import type { SidebarView } from "@/components/workspace/layout/workspace-sidebar";
 
 // ── UI state atoms ──
 
 export const sidebarViewAtom = atom<SidebarView>("my-canvas");
 export const searchQueryAtom = atom<string>("");
 export const activeTabAtom = atom<string>("all");
+export const activeCategoryFilterAtom = atom<string | null>(null);
+export type CanvasViewMode = "list" | "grid";
+export const canvasViewModeAtom = atom<CanvasViewMode>("list");
 
 // ── Dialog state atoms ──
 

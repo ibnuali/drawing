@@ -3,7 +3,7 @@
 import * as React from "react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
-import { ShareModal } from "@/components/workspace/share-modal";
+import { ShareModal } from "@/components/workspace/share/share-modal";
 import { Share2 } from "lucide-react";
 
 interface ShareButtonProps {

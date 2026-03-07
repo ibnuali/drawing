@@ -9,9 +9,9 @@ import type { Id } from "@/convex/_generated/dataModel";
 import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw";
 import type { ExcalidrawWrapperHandle } from "@/components/excalidraw/excalidraw-wrapper";
 import { useCollaboration } from "@/hooks/use-collaboration";
-import { ShareButton } from "@/components/workspace/share-button";
 import dynamic from "next/dynamic";
 import { Spinner } from "@/components/ui/spinner";
+import { ShareButton } from "@/components/workspace/share/share-button";
 
 const ExcalidrawWrapper = dynamic(
   async () =>
@@ -176,7 +176,6 @@ export default function CanvasPage() {
     : resolvedCanvas?.data;
 
   return (
-    <>
       <ExcalidrawWrapper
         ref={wrapperRef}
         initialData={initialDataForEditor}
@@ -191,6 +190,5 @@ export default function CanvasPage() {
           <ShareButton canvasId={canvasId} isOwner={isOwner} userId={userId} />
         }
       />
-    </>
   );
 }

@@ -19,7 +19,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CanvasCard } from "./canvas-card";
+import { CanvasCard } from "../canvas/canvas-card";
 import {
   ChevronDown,
   ChevronRight,
