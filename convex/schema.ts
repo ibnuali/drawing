@@ -12,9 +12,11 @@ export default defineSchema({
     linkAccessLevel: v.optional(v.union(v.literal("editor"), v.literal("viewer"))),
     updatedAt: v.number(),
     categoryId: v.optional(v.id("categories")),
+    deletedAt: v.optional(v.number()),
   })
     .index("by_owner", ["ownerId"])
-    .index("by_category", ["categoryId"]),
+    .index("by_category", ["categoryId"])
+    .index("by_owner_deleted", ["ownerId", "deletedAt"]),
 
   categories: defineTable({
     name: v.string(),

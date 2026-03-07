@@ -11,6 +11,7 @@ import {
   sharedCanvasesAtom,
   activeCollaboratorsAtom,
   searchQueryAtom,
+  trashCanvasesAtom,
 } from "@/lib/workspace-atoms";
 import { useAtomValue } from "jotai";
 
@@ -26,6 +27,7 @@ export function useWorkspaceSync() {
   const setCategories = useSetAtom(categoriesAtom);
   const setSharedCanvases = useSetAtom(sharedCanvasesAtom);
   const setCollaborators = useSetAtom(activeCollaboratorsAtom);
+  const setTrashCanvases = useSetAtom(trashCanvasesAtom);
 
   const canvases = useQuery(
     api.canvases.list,
@@ -44,6 +46,11 @@ export function useWorkspaceSync() {
       : "skip",
   );
 
+  const trashCanvases = useQuery(
+    api.canvases.listTrash,
+    session?.user ? { ownerId: session.user.id } : "skip",
+  );
+
   const canvasIds = canvases?.map((c) => c._id);
   const activeCollaborators = useQuery(
     api.presence.getActiveCollaborators,
@@ -54,6 +61,7 @@ export function useWorkspaceSync() {
   useEffect(() => { setCategories(categories); }, [categories, setCategories]);
   useEffect(() => { setSharedCanvases(sharedCanvases); }, [sharedCanvases, setSharedCanvases]);
   useEffect(() => { setCollaborators(activeCollaborators); }, [activeCollaborators, setCollaborators]);
+  useEffect(() => { setTrashCanvases(trashCanvases); }, [trashCanvases, setTrashCanvases]);
 
   return { session, isPending };
 }

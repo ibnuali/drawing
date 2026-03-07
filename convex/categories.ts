@@ -23,6 +23,30 @@ export const list = query({
 });
 
 /**
+ * Check if a category with the given name exists for the authenticated user.
+ */
+export const existsByName = query({
+  args: { name: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return false;
+    const ownerId = identity.subject;
+
+    const trimmedName = args.name.trim();
+    if (!trimmedName) return false;
+
+    const existing = await ctx.db
+      .query("categories")
+      .withIndex("by_owner_name", (q) =>
+        q.eq("ownerId", ownerId).eq("name", trimmedName)
+      )
+      .first();
+
+    return existing !== null;
+  },
+});
+
+/**
  * Create a new category for the authenticated user.
  * Validates name (non-empty, no duplicates), assigns next order value.
  *

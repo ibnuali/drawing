@@ -7,7 +7,9 @@ export const list = query({
   handler: async (ctx, args) => {
     const canvases = await ctx.db
       .query("canvases")
-      .withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId))
+      .withIndex("by_owner_deleted", (q) =>
+        q.eq("ownerId", args.ownerId).eq("deletedAt", undefined)
+      )
       .order("desc")
       .collect();
 
@@ -64,7 +66,48 @@ export const rename = mutation({
 export const remove = mutation({
   args: { id: v.id("canvases") },
   handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, { deletedAt: Date.now() });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id("canvases") },
+  handler: async (ctx, args) => {
+    const canvas = await ctx.db.get(args.id);
+    if (!canvas) throw new Error("Canvas not found");
+    await ctx.db.patch(args.id, { deletedAt: undefined });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id("canvases") },
+  handler: async (ctx, args) => {
+    const canvas = await ctx.db.get(args.id);
+    if (!canvas) throw new Error("Canvas not found");
+
+    const accessRecords = await ctx.db
+      .query("access")
+      .withIndex("by_canvas", (q) => q.eq("canvasId", args.id))
+      .collect();
+
+    for (const record of accessRecords) {
+      await ctx.db.delete(record._id);
+    }
+
     await ctx.db.delete(args.id);
+  },
+});
+
+export const listTrash = query({
+  args: { ownerId: v.string() },
+  handler: async (ctx, args) => {
+    const canvases = await ctx.db
+      .query("canvases")
+      .withIndex("by_owner_deleted", (q) => q.eq("ownerId", args.ownerId))
+      .order("desc")
+      .collect();
+
+    return canvases.filter((c) => c.deletedAt !== undefined);
   },
 });
 
@@ -260,6 +303,7 @@ export const listShared = query({
       const canvas = await ctx.db.get(record.canvasId);
       if (!canvas) continue;
       if (canvas.ownerId === args.userId) continue;
+      if (canvas.deletedAt !== undefined) continue;
 
       const owner = await lookupUser(canvas.ownerId);
       const ownerName = owner?.name ?? "Unknown";
@@ -317,5 +361,32 @@ export const assignCategory = mutation({
     await ctx.db.patch(args.canvasId, {
       categoryId: args.categoryId ?? undefined,
     });
+  },
+});
+
+export const listByCategoryName = query({
+  args: { ownerId: v.string(), categoryName: v.string(), search: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const category = await ctx.db
+      .query("categories")
+      .withIndex("by_owner_name", (q) =>
+        q.eq("ownerId", args.ownerId).eq("name", args.categoryName)
+      )
+      .unique();
+
+    if (!category) return [];
+
+    const canvases = await ctx.db
+      .query("canvases")
+      .withIndex("by_category", (q) => q.eq("categoryId", category._id))
+      .order("desc")
+      .collect();
+
+    const activeCanvases = canvases.filter((c) => c.deletedAt === undefined);
+
+    if (!args.search) return activeCanvases;
+
+    const q = args.search.toLowerCase();
+    return activeCanvases.filter((c) => c.title.toLowerCase().includes(q));
   },
 });

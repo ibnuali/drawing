@@ -1,6 +1,10 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useAtomValue, useSetAtom } from "jotai";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useSession } from "@/lib/auth-client";
 import { CanvasGridRenderer } from "@/components/workspace/canvas/canvas-grid-renderer";
 import { ViewModeToggle } from "@/components/workspace/view-mode-toggle";
 import { filterCanvasesBySearch } from "@/lib/category-logic";
@@ -12,7 +16,6 @@ import {
   canvasesAtom,
   categoriesAtom,
   isSearchingAtom,
-  activeCategoryFilterAtom,
   createCanvasDialogAtom,
 } from "@/lib/workspace-atoms";
 import {
@@ -24,25 +27,36 @@ import {
 import { Plus, Upload } from "lucide-react";
 
 export function MyCanvasView() {
+  const searchParams = useSearchParams();
+  const { data: session } = useSession();
   const canvases = useAtomValue(canvasesAtom);
   const categories = useAtomValue(categoriesAtom);
   const searchQuery = useAtomValue(searchQueryAtom);
   const isSearching = useAtomValue(isSearchingAtom);
-  const activeCategoryFilter = useAtomValue(activeCategoryFilterAtom);
+  const activeCategoryFilter = searchParams.get("category");
   const actions = useWorkspaceActions();
   const setCreateDialogOpen = useSetAtom(createCanvasDialogAtom);
 
+  const categoryCanvases = useQuery(
+    api.canvases.listByCategoryName,
+    session?.user && activeCategoryFilter
+      ? { ownerId: session.user.id, categoryName: activeCategoryFilter, search: isSearching ? searchQuery : undefined }
+      : "skip"
+  );
+
   const allCanvases = canvases ?? [];
+  const displayCanvases = activeCategoryFilter ? (categoryCanvases ?? []) : allCanvases;
 
-  // Apply category filter, then search
-  const categoryFiltered = activeCategoryFilter
-    ? allCanvases.filter((c) => c.categoryId === activeCategoryFilter)
+  const searchFiltered = isSearching
+    ? filterCanvasesBySearch(allCanvases, searchQuery)
     : allCanvases;
-  const filteredCanvases = isSearching
-    ? filterCanvasesBySearch(categoryFiltered, searchQuery)
-    : categoryFiltered;
 
-  // Category name lookup for search badges
+  const filteredCanvases = activeCategoryFilter
+    ? displayCanvases
+    : searchFiltered;
+
+  const isLoading = canvases === undefined || (activeCategoryFilter && categoryCanvases === undefined);
+
   const categoryNameMap = new Map<string, string>();
   for (const cat of categories ?? []) {
     categoryNameMap.set(cat._id, cat.name);
@@ -60,16 +74,16 @@ export function MyCanvasView() {
         <ContextMenuTrigger
           render={
             <div className="flex-1 flex flex-col w-full h-full">
-              {canvases === undefined && <LoadingSkeleton />}
+              {isLoading && <LoadingSkeleton />}
 
-              {canvases !== undefined && isSearching && (
+              {!isLoading && isSearching && (
                 <SearchResults
                   canvases={filteredCanvases}
                   categoryNameMap={categoryNameMap}
                 />
               )}
 
-              {canvases !== undefined && !isSearching && (
+              {!isLoading && !isSearching && (
                 <>
                   {filteredCanvases.length === 0 ? (
                     <div className="mt-16 flex flex-col items-center gap-2">

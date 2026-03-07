@@ -41,6 +41,7 @@ type SharedCanvasResult = {
 };
 export const sharedCanvasesAtom = atom<SharedCanvasResult[] | undefined>(undefined);
 export const activeCollaboratorsAtom = atom<Record<string, CollaboratorInfo> | undefined>(undefined);
+export const trashCanvasesAtom = atom<Doc<"canvases">[] | undefined>(undefined);
 
 // ── Derived atoms ──
 

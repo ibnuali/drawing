@@ -1,42 +1,84 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, FolderOpen, Plus } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  FolderOpen,
+  Plus,
+  TrashIcon,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   sidebarViewAtom,
   sortedCategoriesAtom,
-  activeCategoryFilterAtom,
   createCategoryDialogAtom,
 } from "@/lib/workspace-atoms";
 import { NewWorkspaceDropdown } from "@/components/workspace/new-workspace-dropdown";
+import { useWorkspaceActions } from "@/hooks/use-workspace-actions";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
-export type SidebarView = "my-canvas" | "shared";
+export type SidebarView = "my-canvas" | "shared" | "trash";
 
-const navItems: { id: SidebarView; label: string; icon: React.ElementType; href?: string }[] = [
-  { id: "my-canvas", label: "My Canvas", icon: LayoutDashboard, href: "/workspace/my-canvas" },
-  { id: "shared", label: "Shared with me", icon: Users, href: "/workspace/shared" },
+const navItems: {
+  id: SidebarView;
+  label: string;
+  icon: React.ElementType;
+  href?: string;
+}[] = [
+  {
+    id: "my-canvas",
+    label: "My Canvas",
+    icon: LayoutDashboard,
+    href: "/workspace/my-canvas",
+  },
+  {
+    id: "shared",
+    label: "Shared with me",
+    icon: Users,
+    href: "/workspace/shared",
+  },
+  {
+    id: "trash",
+    label: "Trash",
+    icon: Trash2,
+    href: "/workspace/trash",
+  },
 ];
 
 export function WorkspaceSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeView, onViewChange] = useAtom(sidebarViewAtom);
   const sortedCategories = useAtomValue(sortedCategoriesAtom);
-  const [activeCategoryFilter, setActiveCategoryFilter] = useAtom(activeCategoryFilterAtom);
   const setCreateCategoryOpen = useSetAtom(createCategoryDialogAtom);
+  const { handleDeleteCategory } = useWorkspaceActions();
+
+  const activeCategoryFilter = searchParams.get("category");
 
   const handleNavClick = (id: SidebarView) => {
     onViewChange(id);
-    setActiveCategoryFilter(null);
   };
 
-  const handleCategoryClick = (categoryId: string) => {
+  const handleCategoryClick = (categoryName: string) => {
     onViewChange("my-canvas");
-    setActiveCategoryFilter(
-      activeCategoryFilter === categoryId ? null : categoryId,
-    );
+    const params = new URLSearchParams(searchParams);
+    const currentCategory = params.get("category");
+    if (currentCategory === categoryName) {
+      params.delete("category");
+    } else {
+      params.set("category", categoryName);
+    }
+    router.push(`/workspace/my-canvas?${params.toString()}`);
   };
 
   return (
@@ -45,7 +87,9 @@ export function WorkspaceSidebar() {
       <div className="flex border-b border-border/60 bg-background md:hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = item.href ? pathname === item.href : activeView === item.id;
+          const isActive = item.href
+            ? pathname === item.href
+            : activeView === item.id;
           if (item.href) {
             return (
               <Link
@@ -53,7 +97,7 @@ export function WorkspaceSidebar() {
                 href={item.href}
                 className={cn(
                   "flex flex-1 items-center justify-center gap-2 px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
+                  isActive && !activeCategoryFilter
                     ? "border-b-2 border-primary text-primary"
                     : "text-muted-foreground",
                 )}
@@ -88,17 +132,17 @@ export function WorkspaceSidebar() {
 
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = item.href 
-              ? pathname === item.href 
+            const isActive = item.href
+              ? pathname === item.href
               : activeView === item.id && activeCategoryFilter === null;
             const content = (
               <button
                 key={item.id}
-                onClick={() => item.href ? null : handleNavClick(item.id)}
+                onClick={() => handleNavClick(item.id)}
                 className={cn(
-                  "flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   "hover:bg-accent hover:text-accent-foreground",
-                  isActive
+                  isActive && activeCategoryFilter === null
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground",
                 )}
@@ -126,20 +170,34 @@ export function WorkspaceSidebar() {
               </span>
               <div className="flex flex-col gap-0.5">
                 {sortedCategories.map((category) => (
-                  <button
-                    key={category._id}
-                    onClick={() => handleCategoryClick(category._id)}
-                    className={cn(
-                      "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors cursor-pointer truncate",
-                      "hover:bg-accent hover:text-accent-foreground",
-                      activeCategoryFilter === category._id
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    <FolderOpen className="size-3.5 shrink-0" />
-                    <span className="truncate">{category.name}</span>
-                  </button>
+                  <ContextMenu key={category._id}>
+                    <ContextMenuTrigger
+                      render={
+                        <button
+                          onClick={() => handleCategoryClick(category.name)}
+                          className={cn(
+                            "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors cursor-pointer truncate",
+                            "hover:bg-accent hover:text-accent-foreground",
+                            activeCategoryFilter === category.name
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          <FolderOpen className="size-3.5 shrink-0" />
+                          <span className="truncate">{category.name}</span>
+                        </button>
+                      }
+                    />
+                    <ContextMenuContent>
+                      <ContextMenuItem
+                        variant="destructive"
+                        onClick={() => handleDeleteCategory(category._id)}
+                      >
+                        <TrashIcon />
+                        Delete
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
                 ))}
               </div>
             </>

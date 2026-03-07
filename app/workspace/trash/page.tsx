@@ -9,11 +9,11 @@ import { RenameCanvasDialog } from "@/components/workspace/canvas/rename-canvas-
 import { CreateCategoryDialog } from "@/components/workspace/category/create-category-dialog";
 import { RenameCategoryDialog } from "@/components/workspace/category/rename-category-dialog";
 import { DeleteCategoryDialog } from "@/components/workspace/delete-category-dialog";
-import { SharedCanvasView } from "@/components/workspace/shared-canvas-view";
+import { TrashCanvasView } from "@/components/workspace/trash-canvas-view";
 import { Spinner } from "@/components/ui/spinner";
 import { useWorkspaceSync } from "@/hooks/use-workspace-sync";
 
-export default function SharedWorkspacePage() {
+export default function TrashWorkspacePage() {
   const router = useRouter();
   const { session, isPending } = useWorkspaceSync();
 
@@ -39,7 +39,7 @@ export default function SharedWorkspacePage() {
         <WorkspaceSidebar />
 
         <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-2">
-          <SharedCanvasView />
+          <TrashCanvasView />
         </main>
       </div>
 

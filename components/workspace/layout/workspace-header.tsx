@@ -1,26 +1,16 @@
 "use client";
 
-import { signOut, useSession } from "@/lib/auth-client";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import Image from "next/image";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAtom } from "jotai";
 import { searchQueryAtom } from "@/lib/workspace-atoms";
+import { UserProfileDropdown } from "@/components/ui/user-profile-dropdown";
+import { Separator } from "@/components/ui/separator";
 
 export function WorkspaceHeader() {
-  const { data: session, isPending } = useSession();
   const [searchQuery, onSearchChange] = useAtom(searchQueryAtom);
-
-  const initials = session?.user.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-
   return (
     <header className="border-border/60 bg-background/80 sticky top-0 z-30 flex items-center gap-4 border-b px-6 py-3 backdrop-blur-sm">
       <div className="flex items-center gap-2.5">
@@ -40,36 +30,13 @@ export function WorkspaceHeader() {
           onChange={(e) => onSearchChange(e.target.value)}
           className="h-8 pl-8 text-xs"
         />
-
       </div>
 
       <div className="ml-auto flex items-center gap-2">
         <ThemeToggle />
-        <div className="bg-border mx-1 h-5 w-px" />
 
-        {session?.user.image ? (
-          <img
-            src={session?.user.image}
-            alt={session?.user.name}
-            className="size-7 rounded-full object-cover"
-          />
-        ) : (
-          <div className="bg-muted text-muted-foreground flex size-7 items-center justify-center rounded-full text-[10px] font-medium">
-            {initials}
-          </div>
-        )}
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button variant="ghost" size="icon-lg" onClick={() => signOut()}>
-                <LogOut />
-              </Button>
-            }
-          />
-          <TooltipContent>
-            <p>Logout</p>
-          </TooltipContent>
-        </Tooltip>
+        <Separator orientation="vertical" />
+        <UserProfileDropdown />
       </div>
     </header>
   );

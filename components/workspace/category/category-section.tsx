@@ -60,7 +60,7 @@ export function CategorySection({
   canvasActions,
   categories,
   activeCollaborators,
-}: CategorySectionProps) {
+}: Readonly<CategorySectionProps>) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const isCollapsed = category.isCollapsed === true;

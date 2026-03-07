@@ -33,7 +33,7 @@ export function CanvasMenuContent({
   categories,
   onDeleteClick,
   copyPublicLink,
-}: CanvasMenuContentProps) {
+}: Readonly<CanvasMenuContentProps>) {
   return (
     <ContextMenuContent>
       <ContextMenuItem onClick={() => actions?.onRename(canvasId)}>

@@ -27,15 +27,15 @@ export function CanvasDeleteDialog({
   canvasId,
   onDelete,
   pendingDeleteEvent,
-}: CanvasDeleteDialogProps) {
+}: Readonly<CanvasDeleteDialogProps>) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent onClick={(e) => e.stopPropagation()}>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete canvas</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete &ldquo;{title}&rdquo;? This action
-            cannot be undone.
+            Are you sure you want to delete &ldquo;{title}&rdquo;? It will be
+            moved to trash and can be restored later.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -15,8 +15,13 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { validateCategoryName, isDuplicateName } from "@/lib/category-logic";
 import { useAtom, useAtomValue } from "jotai";
-import { createCategoryDialogAtom, categoryNamesAtom } from "@/lib/workspace-atoms";
+import {
+  createCategoryDialogAtom,
+  categoryNamesAtom,
+} from "@/lib/workspace-atoms";
 import { useWorkspaceActions } from "@/hooks/use-workspace-actions";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 export function CreateCategoryDialog() {
   const [open, setOpen] = useAtom(createCategoryDialogAtom);
@@ -24,15 +29,43 @@ export function CreateCategoryDialog() {
   const { handleCreateCategory } = useWorkspaceActions();
   const [name, setName] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
+  const [debouncedName, setDebouncedName] = React.useState("");
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const prevCategoryExists = React.useRef<boolean | undefined>(undefined);
+
+  const categoryExists = useQuery(
+    api.categories.existsByName,
+    debouncedName.trim().length > 0 ? { name: debouncedName } : "skip",
+  );
 
   React.useEffect(() => {
     if (open) {
       setName("");
       setError(null);
+      setDebouncedName("");
+      prevCategoryExists.current = undefined;
       setTimeout(() => inputRef.current?.focus(), 0);
     }
   }, [open]);
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedName(name);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [name]);
+
+  React.useEffect(() => {
+    if (categoryExists === undefined) return;
+    if (categoryExists !== prevCategoryExists.current) {
+      prevCategoryExists.current = categoryExists;
+      if (categoryExists) {
+        setError("A category with this name already exists");
+      } else if (error === "A category with this name already exists") {
+        setError(null);
+      }
+    }
+  }, [categoryExists, error]);
 
   const validate = (value: string): string | null => {
     const result = validateCategoryName(value);
@@ -47,6 +80,10 @@ export function CreateCategoryDialog() {
     const validationError = validate(name);
     if (validationError) {
       setError(validationError);
+      return;
+    }
+    if (categoryExists) {
+      setError("A category with this name already exists");
       return;
     }
     handleCreateCategory(name.trim());
@@ -79,11 +116,12 @@ export function CreateCategoryDialog() {
                 setName(e.target.value);
                 setError(null);
               }}
+              className={
+                error ? "border-destructive focus-visible:ring-destructive" : ""
+              }
             />
           </Field>
-          {error && (
-            <p className="text-destructive mt-1.5 text-xs">{error}</p>
-          )}
+          {error && <p className="text-destructive mt-1.5 text-xs">{error}</p>}
         </form>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
