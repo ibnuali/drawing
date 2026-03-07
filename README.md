@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Excalidraw Clone
+
+A collaborative online whiteboard application built with Next.js, Excalidraw, and Convex.
+
+## Features
+
+- **Drawing Canvas** - Infinite canvas powered by Excalidraw
+- **Real-time Collaboration** - Work together with team members in real-time
+- **User Authentication** - Secure sign-in/sign-up with Better Auth
+- **Canvas Management** - Create, rename, and delete canvases
+- **Categories** - Organize canvases into custom categories
+- **Sharing** - Share canvases with customizable access levels (view/edit)
+- **Dark Mode** - Full dark mode support
+
+## Tech Stack
+
+- **Frontend**: Next.js 16, React 19, Tailwind CSS
+- **Canvas**: Excalidraw
+- **Backend**: Convex (real-time database)
+- **Auth**: Better Auth
+- **UI Components**: Shadcn/ui, Lucide icons
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm, yarn, pnpm, or bun
+
+### Installation
+
+```bash
+npm install
+```
+
+### Environment Setup
+
+Create a `.env.local` file with your Convex and auth credentials:
+
+```
+CONVEX_DEPLOYMENT=your-deployment-name
+NEXT_PUBLIC_CONVEX_URL=your-convex-url
+BETTER_AUTH_SECRET=your-secret
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+├── (auth)/          # Authentication pages (sign-in, sign-up)
+├── canvas/          # Canvas view pages
+├── workspace/       # Main workspace with canvas management
+└── api/             # API routes
+components/
+├── excalidraw/      # Excalidraw wrapper and customizations
+├── workspace/       # Workspace-specific components
+└── ui/              # Reusable UI components
+convex/
+├── canvases.ts      # Canvas CRUD operations
+├── categories.ts    # Category management
+├── access.ts        # Sharing and permissions
+└── presence.ts      # Real-time presence
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
