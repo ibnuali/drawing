@@ -1,6 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import * as React from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -16,6 +17,7 @@ import {
   canvasesAtom,
   categoriesAtom,
   isSearchingAtom,
+  canvasViewModeAtom,
   createCanvasDialogAtom,
 } from "@/lib/workspace-atoms";
 import {
@@ -28,18 +30,30 @@ import { Plus, Upload } from "lucide-react";
 
 export function MyCanvasView() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const { data: session } = useSession();
   const canvases = useAtomValue(canvasesAtom);
   const categories = useAtomValue(categoriesAtom);
   const searchQuery = useAtomValue(searchQueryAtom);
   const isSearching = useAtomValue(isSearchingAtom);
+  const viewMode = useAtomValue(canvasViewModeAtom);
   const activeCategoryFilter = searchParams.get("category");
   const actions = useWorkspaceActions();
   const setCreateDialogOpen = useSetAtom(createCanvasDialogAtom);
 
+  const activeCategory = categories?.find((c) => c.name === activeCategoryFilter);
+
+  const isValidCategory = activeCategoryFilter && categories && !activeCategory;
+  React.useEffect(() => {
+    if (isValidCategory) {
+      router.replace(pathname);
+    }
+  }, [isValidCategory, router, pathname]);
+
   const categoryCanvases = useQuery(
     api.canvases.listByCategoryName,
-    session?.user && activeCategoryFilter
+    session?.user && activeCategoryFilter && viewMode === "grid"
       ? { ownerId: session.user.id, categoryName: activeCategoryFilter, search: isSearching ? searchQuery : undefined }
       : "skip"
   );
@@ -55,12 +69,16 @@ export function MyCanvasView() {
     ? displayCanvases
     : searchFiltered;
 
-  const isLoading = canvases === undefined || (activeCategoryFilter && categoryCanvases === undefined);
+  const isLoading = viewMode === "grid" && (canvases === undefined || (activeCategoryFilter && categoryCanvases === undefined));
 
   const categoryNameMap = new Map<string, string>();
   for (const cat of categories ?? []) {
     categoryNameMap.set(cat._id, cat.name);
   }
+
+  const showEmptyState = viewMode === "list"
+    ? false
+    : filteredCanvases.length === 0;
 
   return (
     <>
@@ -85,7 +103,7 @@ export function MyCanvasView() {
 
               {!isLoading && !isSearching && (
                 <>
-                  {filteredCanvases.length === 0 ? (
+                  {showEmptyState ? (
                     <div className="mt-16 flex flex-col items-center gap-2">
                       <p className="text-foreground text-sm font-medium">
                         {activeCategoryFilter
@@ -102,6 +120,7 @@ export function MyCanvasView() {
                     <CanvasGridRenderer
                       items={filteredCanvases}
                       actions={actions.canvasActions}
+                      categoryId={activeCategory?._id}
                     />
                   )}
                 </>

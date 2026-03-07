@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { components } from "./_generated/api";
+import { paginationOptsValidator } from "convex/server";
 
 export const list = query({
   args: { ownerId: v.string(), search: v.optional(v.string()) },
@@ -20,6 +21,32 @@ export const list = query({
   },
 });
 
+export const listPaginated = query({
+  args: {
+    ownerId: v.string(),
+    paginationOpts: paginationOptsValidator,
+    categoryId: v.optional(v.id("categories")),
+  },
+  handler: async (ctx, args) => {
+    if (args.categoryId) {
+      return await ctx.db
+        .query("canvases")
+        .withIndex("by_category", (q) => q.eq("categoryId", args.categoryId))
+        .filter((q) => q.eq(q.field("deletedAt"), undefined))
+        .order("desc")
+        .paginate(args.paginationOpts);
+    }
+
+    return await ctx.db
+      .query("canvases")
+      .withIndex("by_owner_deleted", (q) =>
+        q.eq("ownerId", args.ownerId).eq("deletedAt", undefined)
+      )
+      .order("desc")
+      .paginate(args.paginationOpts);
+  },
+});
+
 export const get = query({
   args: { id: v.id("canvases") },
   handler: async (ctx, args) => {
@@ -28,11 +55,12 @@ export const get = query({
 });
 
 export const create = mutation({
-  args: { title: v.string(), ownerId: v.string() },
+  args: { title: v.string(), ownerId: v.string(), categoryId: v.optional(v.id("categories")) },
   handler: async (ctx, args) => {
     return ctx.db.insert("canvases", {
       title: args.title,
       ownerId: args.ownerId,
+      categoryId: args.categoryId,
       updatedAt: Date.now(),
     });
   },

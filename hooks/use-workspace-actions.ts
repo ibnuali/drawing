@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "convex/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { api } from "@/convex/_generated/api";
@@ -16,6 +16,7 @@ import { useSession } from "@/lib/auth-client";
 
 export function useWorkspaceActions() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const categories = useAtomValue(categoriesAtom);
 
@@ -35,13 +36,18 @@ export function useWorkspaceActions() {
 
   const handleCreate = async (title: string) => {
     if (!session?.user) return;
-    const id = await createCanvas({ title, ownerId: session.user.id });
-    router.push(`/workspace/${id}`);
+    const categoryParam = searchParams.get("category");
+    let categoryId: Id<"categories"> | undefined;
+    if (categoryParam && categories) {
+      const category = categories.find((c) => c.name === categoryParam);
+      if (category) categoryId = category._id;
+    }
+    await createCanvas({ title, ownerId: session.user.id, categoryId });
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: Id<"canvases">) => {
+  const handleDelete = (e: React.MouseEvent, id: Id<"canvases">) => {
     e.stopPropagation();
-    await removeCanvas({ id });
+    void removeCanvas({ id });
   };
 
   const handleRename = (id: Id<"canvases">) => setRenameTarget(id);
@@ -50,7 +56,9 @@ export function useWorkspaceActions() {
     renameCanvasMut({ id, title: newTitle });
   };
 
-  const handleTogglePublic = (id: Id<"canvases">) => togglePublicMut({ id });
+  const handleTogglePublic = (id: Id<"canvases">) => {
+    void togglePublicMut({ id });
+  };
 
   const handleCopyCollabLink = (id: Id<"canvases">) => {
     navigator.clipboard.writeText(`${window.location.origin}/workspace/${id}`);

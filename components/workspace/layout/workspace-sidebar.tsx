@@ -8,6 +8,7 @@ import {
   Plus,
   TrashIcon,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
@@ -16,6 +17,7 @@ import {
   sidebarViewAtom,
   sortedCategoriesAtom,
   createCategoryDialogAtom,
+  renameCategoryTargetAtom,
 } from "@/lib/workspace-atoms";
 import { NewWorkspaceDropdown } from "@/components/workspace/new-workspace-dropdown";
 import { useWorkspaceActions } from "@/hooks/use-workspace-actions";
@@ -61,6 +63,7 @@ export function WorkspaceSidebar() {
   const [activeView, onViewChange] = useAtom(sidebarViewAtom);
   const sortedCategories = useAtomValue(sortedCategoriesAtom);
   const setCreateCategoryOpen = useSetAtom(createCategoryDialogAtom);
+  const setRenameCategoryTarget = useSetAtom(renameCategoryTargetAtom);
   const { handleDeleteCategory } = useWorkspaceActions();
 
   const activeCategoryFilter = searchParams.get("category");
@@ -189,6 +192,12 @@ export function WorkspaceSidebar() {
                       }
                     />
                     <ContextMenuContent>
+                      <ContextMenuItem
+                        onClick={() => setRenameCategoryTarget(category._id)}
+                      >
+                        <Pencil />
+                        Rename
+                      </ContextMenuItem>
                       <ContextMenuItem
                         variant="destructive"
                         onClick={() => handleDeleteCategory(category._id)}

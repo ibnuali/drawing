@@ -69,23 +69,30 @@ export function CanvasCard({
               <button
                 data-canvas-item="true"
                 className={cn(
-                  "group/canvas border-border/60 hover:border-border relative flex cursor-pointer items-center gap-3 rounded-lg border bg-transparent px-3 py-2 transition-all hover:bg-accent/50",
+                  "group/canvas relative flex cursor-pointer items-center gap-3 bg-transparent px-3 py-2 transition-all hover:bg-accent/50 border-b border-border/40 last:border-b-0 w-full",
                 )}
                 onClick={() => actions?.onOpen(canvas._id)}
               >
                 <Pencil className="text-muted-foreground/40 shrink-0 size-5" />
-                <span className="text-foreground truncate text-sm font-medium flex-1 text-left">
+                <span className="text-foreground truncate text-sm font-medium flex-1 min-w-0 text-left">
                   {canvas.title}
                 </span>
-                <span className="text-muted-foreground text-xs shrink-0">
+                {isShared && (
+                  <span className="text-muted-foreground text-xs shrink-0 w-24 truncate text-left">
+                    {ownerName ?? "Unknown"}
+                  </span>
+                )}
+                <span className="text-muted-foreground text-xs shrink-0 w-16 text-right">
                   {formatRelativeDate(canvas.updatedAt)}
                 </span>
-                {isPublic && (
-                  <Globe className="text-muted-foreground/60 size-3.5 shrink-0" />
-                )}
-                {isCollabEnabled && (
-                  <Users className="text-muted-foreground/60 size-3.5 shrink-0" />
-                )}
+                <div className="flex items-center gap-1 w-8 shrink-0">
+                  {isPublic && (
+                    <Globe className="text-muted-foreground/60 size-3.5 shrink-0" />
+                  )}
+                  {isCollabEnabled && (
+                    <Users className="text-muted-foreground/60 size-3.5 shrink-0" />
+                  )}
+                </div>
               </button>
             }
             className="w-full"

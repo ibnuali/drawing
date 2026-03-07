@@ -1,24 +1,42 @@
 "use client";
 
 import { useAtomValue } from "jotai";
-import type { Doc } from "@/convex/_generated/dataModel";
+import { useSession } from "@/lib/auth-client";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { CanvasCard } from "@/components/workspace/canvas/canvas-card";
+import { CanvasListTable } from "@/components/workspace/canvas/canvas-list-table";
 import {
   activeCollaboratorsAtom,
   categoryOptionsAtom,
   canvasViewModeAtom,
+  isSearchingAtom,
   type CanvasActions,
 } from "@/lib/workspace-atoms";
 
 interface CanvasGridRendererProps {
   items: Doc<"canvases">[];
   actions: CanvasActions;
+  categoryId?: Id<"categories">;
 }
 
-export function CanvasGridRenderer({ items, actions }: Readonly<CanvasGridRendererProps>) {
+export function CanvasGridRenderer({ items, actions, categoryId }: Readonly<CanvasGridRendererProps>) {
   const viewMode = useAtomValue(canvasViewModeAtom);
   const activeCollaborators = useAtomValue(activeCollaboratorsAtom);
   const categoryOptions = useAtomValue(categoryOptionsAtom);
+  const isSearching = useAtomValue(isSearchingAtom);
+  const { data: session } = useSession();
+
+  if (viewMode === "list" && session?.user && !isSearching) {
+    return (
+      <CanvasListTable
+        ownerId={session.user.id}
+        categoryId={categoryId}
+        actions={actions}
+        collaborators={activeCollaborators}
+        categories={categoryOptions}
+      />
+    );
+  }
 
   if (viewMode === "list") {
     return (

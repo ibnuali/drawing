@@ -2,6 +2,7 @@
 
 import { useAtomValue } from "jotai";
 import { CanvasCard } from "@/components/workspace/canvas/canvas-card";
+import { SharedCanvasListTable } from "@/components/workspace/canvas/shared-canvas-list-table";
 import { ViewModeToggle } from "@/components/workspace/view-mode-toggle";
 import { Spinner } from "@/components/ui/spinner";
 import { useWorkspaceActions } from "@/hooks/use-workspace-actions";
@@ -36,27 +37,10 @@ export function SharedCanvasView() {
 
       {sharedCanvases && sharedCanvases.length > 0 && (
         viewMode === "list" ? (
-          <div className="flex flex-col gap-2">
-            {sharedCanvases.map((canvas) => (
-              <CanvasCard
-                key={canvas._id}
-                canvas={{
-                  _id: canvas._id,
-                  title: canvas.title,
-                  updatedAt: canvas.updatedAt,
-                  isPublic: canvas.isPublic,
-                  collaborationEnabled: canvas.collaborationEnabled,
-                  ownerId: canvas.ownerId,
-                  _creationTime: 0,
-                } as any}
-                actions={actions.canvasActions}
-                isShared
-                ownerName={canvas.ownerName}
-                accessLevel={canvas.accessLevel}
-                isList
-              />
-            ))}
-          </div>
+          <SharedCanvasListTable
+            canvases={sharedCanvases}
+            actions={actions.canvasActions}
+          />
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {sharedCanvases.map((canvas) => (
