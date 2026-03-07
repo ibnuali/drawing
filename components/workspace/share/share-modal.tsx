@@ -11,9 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { EmailInviteInput } from "@/components/workspace/email-invite-input";
-import { CollaboratorList } from "@/components/workspace/collaborator-list";
-import { LinkSettings } from "@/components/workspace/link-settings";
+import { EmailInviteInput } from "@/components/workspace/share/email-invite-input";
+import { CollaboratorList } from "@/components/workspace/share/collaborator-list";
+import { LinkSettings } from "@/components/workspace/share/link-settings";
 
 interface ShareModalProps {
   canvasId: Id<"canvases">;
