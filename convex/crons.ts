@@ -5,7 +5,7 @@ const crons = cronJobs();
 
 crons.interval(
   "purge stale presence records",
-  { minutes: 1 },
+  { minutes: 5 },
   internal.presence.purgeStale,
 );
 
