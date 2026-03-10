@@ -3,7 +3,7 @@
 import * as React from "react";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { Pencil, Globe, Users } from "lucide-react";
+import { Pencil, Globe, Users, File } from "lucide-react";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import type { CanvasActions, CollaboratorInfo } from "@/lib/workspace-atoms";
 import { CanvasMenuContent, type CategoryOption } from "./canvas-menu-content";
@@ -73,7 +73,7 @@ export function CanvasCard({
                 )}
                 onClick={() => actions?.onOpen(canvas._id)}
               >
-                <Pencil className="text-muted-foreground/40 shrink-0 size-5" />
+                <File className="text-muted-foreground/40 shrink-0 size-5" />
                 <span className="text-foreground truncate text-sm font-medium flex-1 min-w-0 text-left">
                   {canvas.title}
                 </span>
