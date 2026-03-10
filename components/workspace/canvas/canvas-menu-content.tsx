@@ -80,7 +80,7 @@ export function CanvasMenuContent({
       <ContextMenuSeparator />
       <ContextMenuItem variant="destructive" onClick={onDeleteClick}>
         <Trash2 />
-        Delete
+        Move to trash
       </ContextMenuItem>
     </ContextMenuContent>
   );
