@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { WorkspaceHeader } from "@/components/workspace/layout/workspace-header";
 import { WorkspaceSidebar } from "@/components/workspace/layout/workspace-sidebar";
 import { CreateCanvasDialog } from "@/components/workspace/canvas/create-canvas-dialog";
+import { ImportCanvasDialog } from "@/components/workspace/canvas/import-canvas-dialog";
 import { RenameCanvasDialog } from "@/components/workspace/canvas/rename-canvas-dialog";
 import { CreateCategoryDialog } from "@/components/workspace/category/create-category-dialog";
 import { RenameCategoryDialog } from "@/components/workspace/category/rename-category-dialog";
@@ -44,6 +45,7 @@ export default function SharedWorkspacePage() {
       </div>
 
       <CreateCanvasDialog />
+      <ImportCanvasDialog />
       <RenameCanvasDialog />
       <CreateCategoryDialog />
       <RenameCategoryDialog />

@@ -14,6 +14,7 @@ export const canvasViewModeAtom = atom<CanvasViewMode>("grid");
 // ── Dialog state atoms ──
 
 export const createCanvasDialogAtom = atom(false);
+export const importCanvasDialogAtom = atom(false);
 export const renameCanvasTargetAtom = atom<Id<"canvases"> | null>(null);
 export const createCategoryDialogAtom = atom(false);
 export const renameCategoryTargetAtom = atom<Id<"categories"> | null>(null);

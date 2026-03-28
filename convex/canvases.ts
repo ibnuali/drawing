@@ -56,12 +56,18 @@ export const get = query({
 });
 
 export const create = mutation({
-  args: { title: v.string(), ownerId: v.string(), categoryId: v.optional(v.id("categories")) },
+  args: {
+    title: v.string(),
+    ownerId: v.string(),
+    categoryId: v.optional(v.id("categories")),
+    data: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     return ctx.db.insert("canvases", {
       title: args.title,
       ownerId: args.ownerId,
       categoryId: args.categoryId,
+      data: args.data,
       updatedAt: Date.now(),
     });
   },

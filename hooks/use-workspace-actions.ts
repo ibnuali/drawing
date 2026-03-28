@@ -45,6 +45,16 @@ export function useWorkspaceActions() {
     await createCanvas({ title, ownerId: session.user.id, categoryId });
   };
 
+  const handleImport = async (title: string, data: string, categoryId?: string) => {
+    if (!session?.user) return;
+    await createCanvas({
+      title,
+      ownerId: session.user.id,
+      categoryId: categoryId as Id<"categories"> | undefined,
+      data,
+    });
+  };
+
   const handleDelete = (e: React.MouseEvent, id: Id<"canvases">) => {
     e.stopPropagation();
     void removeCanvas({ id });
@@ -124,6 +134,7 @@ export function useWorkspaceActions() {
   return {
     canvasActions,
     handleCreate,
+    handleImport,
     handleDelete,
     handleRename,
     handleRenameConfirm,

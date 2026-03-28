@@ -8,17 +8,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSetAtom } from "jotai";
-import { createCanvasDialogAtom } from "@/lib/workspace-atoms";
+import { createCanvasDialogAtom, importCanvasDialogAtom } from "@/lib/workspace-atoms";
 
 export function NewWorkspaceDropdown() {
   const setCreateDialogOpen = useSetAtom(createCanvasDialogAtom);
+  const setImportDialogOpen = useSetAtom(importCanvasDialogAtom);
 
   const handleNewWorkspace = () => {
     setCreateDialogOpen(true);
   };
 
   const handleImportWorkspace = () => {
-    console.log("Import workspace clicked");
+    setImportDialogOpen(true);
   };
 
   return (

@@ -19,6 +19,7 @@ import {
   isSearchingAtom,
   canvasViewModeAtom,
   createCanvasDialogAtom,
+  importCanvasDialogAtom,
 } from "@/lib/workspace-atoms";
 import {
   ContextMenu,
@@ -41,6 +42,7 @@ export function MyCanvasView() {
   const activeCategoryFilter = searchParams.get("category");
   const actions = useWorkspaceActions();
   const setCreateDialogOpen = useSetAtom(createCanvasDialogAtom);
+  const setImportDialogOpen = useSetAtom(importCanvasDialogAtom);
 
   const activeCategory = categories?.find((c) => c.name === activeCategoryFilter);
 
@@ -133,7 +135,7 @@ export function MyCanvasView() {
             <Plus className="mr-2 size-4" />
             New workspace
           </ContextMenuItem>
-          <ContextMenuItem onClick={() => console.log("Import")}>
+          <ContextMenuItem onClick={() => setImportDialogOpen(true)}>
             <Upload className="mr-2 size-4" />
             Import workspace
           </ContextMenuItem>
