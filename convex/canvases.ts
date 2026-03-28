@@ -1,6 +1,6 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { components } from "./_generated/api";
+import { mutation, query, action } from "./_generated/server";
+import { components, api } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
 
 export const list = query({
@@ -416,5 +416,55 @@ export const listByCategoryName = query({
 
     const q = args.search.toLowerCase();
     return activeCanvases.filter((c) => c.title.toLowerCase().includes(q));
+  },
+});
+
+export const saveThumbnail = mutation({
+  args: { id: v.id("canvases"), thumbnailId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    const canvas = await ctx.db.get(args.id);
+    if (!canvas) throw new Error("Canvas not found");
+
+    // Delete old thumbnail if exists
+    if (canvas.thumbnailId) {
+      await ctx.storage.delete(canvas.thumbnailId);
+    }
+
+    await ctx.db.patch(args.id, { thumbnailId: args.thumbnailId });
+  },
+});
+
+export const getThumbnailUrl = query({
+  args: { thumbnailId: v.id("_storage") },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.thumbnailId);
+  },
+});
+
+export const uploadThumbnail = action({
+  args: {
+    canvasId: v.id("canvases"),
+    dataUrl: v.string(), // base64 data URL from canvas
+  },
+  handler: async (ctx, args) => {
+    // Convert data URL to blob
+    const base64Data = args.dataUrl.split(',')[1];
+    const mimeType = args.dataUrl.split(',')[0].split(':')[1].split(';')[0];
+
+    const blob = new Blob(
+      [Uint8Array.from(atob(base64Data), c => c.charCodeAt(0))],
+      { type: mimeType }
+    );
+
+    // Store the file in Convex storage
+    const storageId = await ctx.storage.store(blob as any);
+
+    // Update canvas with new thumbnail ID (handles old thumbnail deletion)
+    await ctx.runMutation(api.canvases.saveThumbnail, {
+      id: args.canvasId,
+      thumbnailId: storageId as any,
+    });
+
+    return storageId;
   },
 });

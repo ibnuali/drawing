@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Pencil, Globe, Users, File } from "lucide-react";
 import { cn, formatRelativeDate } from "@/lib/utils";
@@ -37,6 +39,12 @@ export function CanvasCard({
   const pendingDeleteEvent = React.useRef<React.MouseEvent | null>(null);
   const isPublic = canvas.isPublic === true;
   const isCollabEnabled = canvas.collaborationEnabled === true;
+
+  // Fetch thumbnail URL if thumbnailId exists
+  const thumbnailUrl = useQuery(
+    api.canvases.getThumbnailUrl,
+    canvas.thumbnailId ? { thumbnailId: canvas.thumbnailId } : "skip"
+  );
 
   const copyPublicLink = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -126,33 +134,43 @@ export function CanvasCard({
               onClick={() => actions?.onOpen(canvas._id)}
             >
               <div className="bg-muted/40 relative flex h-36 items-center justify-center overflow-hidden">
-                <svg
-                  className="text-border/80 absolute inset-0 size-full"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <defs>
-                    <pattern
-                      id={`grid-${canvas._id}`}
-                      width="20"
-                      height="20"
-                      patternUnits="userSpaceOnUse"
-                    >
-                      <path
-                        d="M 20 0 L 0 0 0 20"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="0.5"
-                      />
-                    </pattern>
-                  </defs>
-                  <rect
-                    width="100%"
-                    height="100%"
-                    fill={`url(#grid-${canvas._id})`}
+                {thumbnailUrl ? (
+                  <img
+                    src={thumbnailUrl}
+                    alt={canvas.title}
+                    className="size-full object-cover"
                   />
-                </svg>
+                ) : (
+                  <>
+                    <svg
+                      className="text-border/80 absolute inset-0 size-full"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <defs>
+                        <pattern
+                          id={`grid-${canvas._id}`}
+                          width="20"
+                          height="20"
+                          patternUnits="userSpaceOnUse"
+                        >
+                          <path
+                            d="M 20 0 L 0 0 0 20"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="0.5"
+                          />
+                        </pattern>
+                      </defs>
+                      <rect
+                        width="100%"
+                        height="100%"
+                        fill={`url(#grid-${canvas._id})`}
+                      />
+                    </svg>
 
-                <Pencil className="text-muted-foreground/20 relative size-10" />
+                    <Pencil className="text-muted-foreground/20 relative size-10" />
+                  </>
+                )}
 
                 <CanvasStatusBadges
                   isPublic={isPublic}

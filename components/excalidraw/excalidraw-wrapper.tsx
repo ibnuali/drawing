@@ -1,15 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { Excalidraw, exportToBlob } from "@excalidraw/excalidraw";
 import type {
   ExcalidrawImperativeAPI,
   Collaborator,
   SocketId,
   BinaryFileData,
+  NonDeletedExcalidrawElement,
+  AppState,
 } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { useTheme } from "next-themes";
+import { useMutation, useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
@@ -39,6 +44,7 @@ type ExcalidrawWrapperProps = {
   onExcalidrawAPI?: (api: ExcalidrawImperativeAPI) => void;
   toolbarExtras?: React.ReactNode;
   topRightUI?: React.ReactNode;
+  canvasId?: Id<"canvases">;
 };
 
 const SAVE_DEBOUNCE_MS = 1000;
@@ -58,6 +64,7 @@ const ExcalidrawWrapper = React.forwardRef<
     onExcalidrawAPI,
     toolbarExtras,
     topRightUI,
+    canvasId,
   },
   ref,
 ) {
@@ -65,6 +72,7 @@ const ExcalidrawWrapper = React.forwardRef<
   const [excalidrawAPI, setExcalidrawAPI] =
     React.useState<ExcalidrawImperativeAPI | null>(null);
   const [lastSavedAt, setLastSavedAt] = React.useState<Date | null>(null);
+  const uploadThumbnail = useAction(api.canvases.uploadThumbnail);
 
   React.useEffect(() => {
     if (excalidrawAPI && onExcalidrawAPI) {
@@ -97,6 +105,40 @@ const ExcalidrawWrapper = React.forwardRef<
     if (!excalidrawAPI || !collaborators) return;
     excalidrawAPI.updateScene({ collaborators });
   }, [excalidrawAPI, collaborators]);
+
+  const generateThumbnail = React.useCallback(async (
+    elements: readonly NonDeletedExcalidrawElement[],
+    appState: AppState,
+    files: Record<string, BinaryFileData>,
+  ) => {
+    if (!canvasId) return;
+
+    try {
+      const blob = await exportToBlob({
+        elements,
+        appState: {
+          viewBackgroundColor: appState.viewBackgroundColor,
+          exportWithDarkMode: resolvedTheme === "dark",
+        },
+        files,
+        maxWidthOrHeight: 300,
+        mimeType: "image/png",
+      });
+
+      // Convert blob to base64 data URL
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      // Upload via Convex action
+      await uploadThumbnail({ canvasId, dataUrl });
+    } catch (error) {
+      console.error("Failed to generate thumbnail:", error);
+    }
+  }, [canvasId, resolvedTheme, uploadThumbnail]);
 
   const flushSave = React.useCallback(() => {
     if (!excalidrawAPI || !onSave) return;
@@ -133,7 +175,12 @@ const ExcalidrawWrapper = React.forwardRef<
     onSave(data);
     saveTrackerRef.current.confirmSave(data);
     setLastSavedAt(new Date());
-  }, [excalidrawAPI, onSave]);
+
+    // Generate and upload thumbnail
+    if (canvasId && elements.length > 0) {
+      generateThumbnail(elements, appState, usedFiles);
+    }
+  }, [excalidrawAPI, onSave, canvasId, generateThumbnail]);
 
   const handleChange = React.useCallback(() => {
     if (!excalidrawAPI || !onSave) return;

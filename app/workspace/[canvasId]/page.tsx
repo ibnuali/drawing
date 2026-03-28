@@ -186,6 +186,7 @@ export default function CanvasPage() {
         collaborators={collaborators}
         onPointerUpdate={handlePointerUpdate}
         onExcalidrawAPI={handleExcalidrawAPI}
+        canvasId={canvasId}
         topRightUI={
           <ShareButton canvasId={canvasId} isOwner={isOwner} userId={userId} />
         }

@@ -9,7 +9,7 @@ export const searchQueryAtom = atom<string>("");
 export const activeTabAtom = atom<string>("all");
 export const activeCategoryFilterAtom = atom<string | null>(null);
 export type CanvasViewMode = "list" | "grid";
-export const canvasViewModeAtom = atom<CanvasViewMode>("list");
+export const canvasViewModeAtom = atom<CanvasViewMode>("grid");
 
 // ── Dialog state atoms ──
 
