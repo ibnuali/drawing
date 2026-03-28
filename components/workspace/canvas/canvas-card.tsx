@@ -4,6 +4,7 @@ import * as React from "react";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useTheme } from "next-themes";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Pencil, Globe, Users, File } from "lucide-react";
 import { cn, formatRelativeDate } from "@/lib/utils";
@@ -35,15 +36,19 @@ export function CanvasCard({
   categories,
   isList,
 }: Readonly<CanvasCardProps>) {
+  const { resolvedTheme } = useTheme();
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const pendingDeleteEvent = React.useRef<React.MouseEvent | null>(null);
   const isPublic = canvas.isPublic === true;
   const isCollabEnabled = canvas.collaborationEnabled === true;
 
-  // Fetch thumbnail URL if thumbnailId exists
+  // Fetch theme-appropriate thumbnail URL
+  const hasThumbnail = canvas.thumbnailId || canvas.thumbnailIdDark;
   const thumbnailUrl = useQuery(
-    api.canvases.getThumbnailUrl,
-    canvas.thumbnailId ? { thumbnailId: canvas.thumbnailId } : "skip"
+    api.canvases.getCanvasThumbnailUrl,
+    hasThumbnail
+      ? { canvasId: canvas._id, theme: resolvedTheme === "dark" ? "dark" : "light" }
+      : "skip",
   );
 
   const copyPublicLink = (e: React.MouseEvent) => {
@@ -133,12 +138,14 @@ export function CanvasCard({
               )}
               onClick={() => actions?.onOpen(canvas._id)}
             >
-              <div className="bg-muted/40 relative flex h-36 items-center justify-center overflow-hidden">
+              <div
+                className={`relative flex h-36 items-center justify-center overflow-hidden ${thumbnailUrl ? "" : "bg-muted/40"}`}
+              >
                 {thumbnailUrl ? (
                   <img
                     src={thumbnailUrl}
                     alt={canvas.title}
-                    className="size-full object-cover"
+                    className="size-full object-contain bg-muted/30"
                   />
                 ) : (
                   <>

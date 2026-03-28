@@ -6,7 +6,8 @@ export default defineSchema({
     title: v.string(),
     ownerId: v.string(),
     data: v.optional(v.string()),
-    thumbnailId: v.optional(v.id("_storage")),
+    thumbnailId: v.optional(v.id("_storage")), // light theme thumbnail
+    thumbnailIdDark: v.optional(v.id("_storage")), // dark theme thumbnail
     isPublic: v.optional(v.boolean()),
     collaborationEnabled: v.optional(v.boolean()),
     linkAccessEnabled: v.optional(v.boolean()),

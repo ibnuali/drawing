@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, action } from "./_generated/server";
 import { components, api } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { paginationOptsValidator } from "convex/server";
 
 export const list = query({
@@ -420,17 +421,28 @@ export const listByCategoryName = query({
 });
 
 export const saveThumbnail = mutation({
-  args: { id: v.id("canvases"), thumbnailId: v.id("_storage") },
+  args: {
+    id: v.id("canvases"),
+    thumbnailId: v.optional(v.id("_storage")),
+    thumbnailIdDark: v.optional(v.id("_storage")),
+  },
   handler: async (ctx, args) => {
     const canvas = await ctx.db.get(args.id);
     if (!canvas) throw new Error("Canvas not found");
 
-    // Delete old thumbnail if exists
-    if (canvas.thumbnailId) {
+    // Delete old thumbnails if being replaced
+    if (args.thumbnailId !== undefined && canvas.thumbnailId && args.thumbnailId !== canvas.thumbnailId) {
       await ctx.storage.delete(canvas.thumbnailId);
     }
+    if (args.thumbnailIdDark !== undefined && canvas.thumbnailIdDark && args.thumbnailIdDark !== canvas.thumbnailIdDark) {
+      await ctx.storage.delete(canvas.thumbnailIdDark);
+    }
 
-    await ctx.db.patch(args.id, { thumbnailId: args.thumbnailId });
+    const updates: { thumbnailId?: Id<"_storage">; thumbnailIdDark?: Id<"_storage"> } = {};
+    if (args.thumbnailId !== undefined) updates.thumbnailId = args.thumbnailId;
+    if (args.thumbnailIdDark !== undefined) updates.thumbnailIdDark = args.thumbnailIdDark;
+
+    await ctx.db.patch(args.id, updates);
   },
 });
 
@@ -441,30 +453,55 @@ export const getThumbnailUrl = query({
   },
 });
 
-export const uploadThumbnail = action({
+export const getCanvasThumbnailUrl = query({
+  args: { canvasId: v.id("canvases"), theme: v.optional(v.union(v.literal("light"), v.literal("dark"))) },
+  handler: async (ctx, args) => {
+    const canvas = await ctx.db.get(args.canvasId);
+    if (!canvas) return null;
+
+    const theme = args.theme ?? "light";
+    const thumbnailId = theme === "dark" ? canvas.thumbnailIdDark : canvas.thumbnailId;
+
+    if (!thumbnailId) {
+      // Fall back to the other theme's thumbnail if this one doesn't exist
+      const fallbackId = theme === "dark" ? canvas.thumbnailId : canvas.thumbnailIdDark;
+      if (!fallbackId) return null;
+      return await ctx.storage.getUrl(fallbackId);
+    }
+
+    return await ctx.storage.getUrl(thumbnailId);
+  },
+});
+
+export const uploadThumbnails = action({
   args: {
     canvasId: v.id("canvases"),
-    dataUrl: v.string(), // base64 data URL from canvas
+    lightDataUrl: v.optional(v.string()), // base64 data URL for light theme
+    darkDataUrl: v.optional(v.string()),  // base64 data URL for dark theme
   },
   handler: async (ctx, args) => {
-    // Convert data URL to blob
-    const base64Data = args.dataUrl.split(',')[1];
-    const mimeType = args.dataUrl.split(',')[0].split(':')[1].split(';')[0];
+    const storeImage = async (dataUrl: string): Promise<Id<"_storage">> => {
+      const base64Data = dataUrl.split(',')[1];
+      const mimeType = dataUrl.split(',')[0].split(':')[1].split(';')[0];
 
-    const blob = new Blob(
-      [Uint8Array.from(atob(base64Data), c => c.charCodeAt(0))],
-      { type: mimeType }
-    );
+      const blob = new Blob(
+        [Uint8Array.from(atob(base64Data), c => c.charCodeAt(0))],
+        { type: mimeType }
+      );
 
-    // Store the file in Convex storage
-    const storageId = await ctx.storage.store(blob as any);
+      return (await ctx.storage.store(blob as any)) as Id<"_storage">;
+    };
 
-    // Update canvas with new thumbnail ID (handles old thumbnail deletion)
+    const lightId = args.lightDataUrl ? await storeImage(args.lightDataUrl) : undefined;
+    const darkId = args.darkDataUrl ? await storeImage(args.darkDataUrl) : undefined;
+
+    // Update canvas with new thumbnail IDs
     await ctx.runMutation(api.canvases.saveThumbnail, {
       id: args.canvasId,
-      thumbnailId: storageId as any,
+      thumbnailId: lightId,
+      thumbnailIdDark: darkId,
     });
 
-    return storageId;
+    return { lightId, darkId };
   },
 });

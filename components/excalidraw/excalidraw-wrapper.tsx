@@ -72,7 +72,7 @@ const ExcalidrawWrapper = React.forwardRef<
   const [excalidrawAPI, setExcalidrawAPI] =
     React.useState<ExcalidrawImperativeAPI | null>(null);
   const [lastSavedAt, setLastSavedAt] = React.useState<Date | null>(null);
-  const uploadThumbnail = useAction(api.canvases.uploadThumbnail);
+  const uploadThumbnails = useAction(api.canvases.uploadThumbnails);
 
   React.useEffect(() => {
     if (excalidrawAPI && onExcalidrawAPI) {
@@ -114,38 +114,57 @@ const ExcalidrawWrapper = React.forwardRef<
     if (!canvasId) return;
 
     try {
-      const blob = await exportToBlob({
-        elements,
-        appState: {
-          viewBackgroundColor: appState.viewBackgroundColor,
-          exportWithDarkMode: resolvedTheme === "dark",
-        },
-        files,
-        maxWidthOrHeight: 300,
-        mimeType: "image/png",
-      });
+      // Generate both light and dark thumbnails
+      const [lightBlob, darkBlob] = await Promise.all([
+        exportToBlob({
+          elements,
+          appState: {
+            viewBackgroundColor: appState.viewBackgroundColor,
+            exportWithDarkMode: false,
+          },
+          files,
+          maxWidthOrHeight: 300,
+          exportPadding: 20,
+          mimeType: "image/png",
+        }),
+        exportToBlob({
+          elements,
+          appState: {
+            viewBackgroundColor: appState.viewBackgroundColor,
+            exportWithDarkMode: true,
+          },
+          files,
+          maxWidthOrHeight: 300,
+          exportPadding: 20,
+          mimeType: "image/png",
+        }),
+      ]);
 
-      // Convert blob to base64 data URL
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
+      // Convert blobs to base64 data URLs
+      const blobToDataUrl = (blob: Blob): Promise<string> =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
 
-      // Upload via Convex action
-      await uploadThumbnail({ canvasId, dataUrl });
+      const [lightDataUrl, darkDataUrl] = await Promise.all([
+        blobToDataUrl(lightBlob),
+        blobToDataUrl(darkBlob),
+      ]);
+
+      // Upload both thumbnails via Convex action
+      await uploadThumbnails({ canvasId, lightDataUrl, darkDataUrl });
     } catch (error) {
-      console.error("Failed to generate thumbnail:", error);
+      console.error("Failed to generate thumbnails:", error);
     }
-  }, [canvasId, resolvedTheme, uploadThumbnail]);
+  }, [canvasId, uploadThumbnails]);
 
   const flushSave = React.useCallback(() => {
     if (!excalidrawAPI || !onSave) return;
 
     const elements = excalidrawAPI.getSceneElements();
-    if (elements.length === 0) return;
-
     const appState = excalidrawAPI.getAppState();
     const allFiles = excalidrawAPI.getFiles();
 
@@ -182,12 +201,6 @@ const ExcalidrawWrapper = React.forwardRef<
     }
   }, [excalidrawAPI, onSave, canvasId, generateThumbnail]);
 
-  const handleChange = React.useCallback(() => {
-    if (!excalidrawAPI || !onSave) return;
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(flushSave, SAVE_DEBOUNCE_MS);
-  }, [excalidrawAPI, onSave, flushSave]);
-
   // Expose imperative handle to parent
   React.useImperativeHandle(ref, () => ({
     flushSave,
@@ -195,12 +208,20 @@ const ExcalidrawWrapper = React.forwardRef<
     getLastSavedAt: () => lastSavedAt,
   }), [flushSave, lastSavedAt]);
 
-  // Cleanup timer on unmount (no flush — parent handles that)
+  // Register onChange callback via imperative API
   React.useEffect(() => {
+    if (!excalidrawAPI || viewMode || !onSave) return;
+
+    const unsubscribe = excalidrawAPI.onChange(() => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(flushSave, SAVE_DEBOUNCE_MS);
+    });
+
     return () => {
+      unsubscribe();
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-  }, []);
+  }, [excalidrawAPI, viewMode, onSave, flushSave]);
 
   return (
     <div
@@ -214,7 +235,6 @@ const ExcalidrawWrapper = React.forwardRef<
       <Excalidraw
         excalidrawAPI={(api) => setExcalidrawAPI(api)}
         initialData={initialScene}
-        onChange={viewMode ? undefined : handleChange}
         viewModeEnabled={viewMode}
         isCollaborating={isCollaborating}
         onPointerUpdate={onPointerUpdate}
