@@ -14,6 +14,17 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 function formatDate(timestamp: number): string {
   const date = new Date(timestamp);
@@ -91,6 +102,7 @@ export function TrashCanvasView() {
   const trashCanvases = useAtomValue(trashCanvasesAtom);
   const restore = useMutation(api.canvases.restore);
   const permanentDelete = useMutation(api.canvases.permanentDelete);
+  const emptyTrash = useMutation(api.canvases.emptyTrash);
 
   const handleRestore = (id: Id<"canvases">) => {
     restore({ id });
@@ -100,12 +112,52 @@ export function TrashCanvasView() {
     permanentDelete({ id });
   };
 
+  const handleEmptyTrash = async (ownerId: string) => {
+    await emptyTrash({ ownerId });
+  };
+
+  const canvasCount = trashCanvases?.length ?? 0;
+
   return (
     <>
       <div className="mb-6 flex items-center justify-between">
         <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
           Trash
         </p>
+        {canvasCount > 0 && (
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                  <Trash2 className="mr-2 size-4" />
+                  Empty trash
+                </Button>
+              }
+            />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Empty trash?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete all {canvasCount} canvas{canvasCount !== 1 ? "es" : ""} in trash. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => {
+                    // Get ownerId from the first canvas
+                    if (trashCanvases && trashCanvases.length > 0) {
+                      handleEmptyTrash(trashCanvases[0].ownerId);
+                    }
+                  }}
+                >
+                  Delete all
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </div>
 
       {trashCanvases === undefined && (

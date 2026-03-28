@@ -133,6 +133,35 @@ export const permanentDelete = mutation({
   },
 });
 
+export const emptyTrash = mutation({
+  args: { ownerId: v.string() },
+  handler: async (ctx, args) => {
+    const canvases = await ctx.db
+      .query("canvases")
+      .withIndex("by_owner_deleted", (q) => q.eq("ownerId", args.ownerId))
+      .collect();
+
+    const deletedCanvases = canvases.filter((c) => c.deletedAt !== undefined);
+
+    for (const canvas of deletedCanvases) {
+      // Delete access records
+      const accessRecords = await ctx.db
+        .query("access")
+        .withIndex("by_canvas", (q) => q.eq("canvasId", canvas._id))
+        .collect();
+
+      for (const record of accessRecords) {
+        await ctx.db.delete(record._id);
+      }
+
+      // Delete canvas
+      await ctx.db.delete(canvas._id);
+    }
+
+    return deletedCanvases.length;
+  },
+});
+
 export const listTrash = query({
   args: { ownerId: v.string() },
   handler: async (ctx, args) => {
