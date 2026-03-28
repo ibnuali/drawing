@@ -59,9 +59,10 @@ export function NavItem({
               ? "border-b-2 border-primary text-primary"
               : "text-muted-foreground",
           )}
+          title={item.label}
         >
-          <Icon className="size-4 shrink-0" />
-          {item.label}
+          <Icon className="size-5 shrink-0" />
+          <span className="sr-only">{item.label}</span>
         </Link>
       );
     }
@@ -74,9 +75,10 @@ export function NavItem({
             ? "border-b-2 border-primary text-primary"
             : "text-muted-foreground",
         )}
+        title={item.label}
       >
-        <Icon className="size-4 shrink-0" />
-        {item.label}
+        <Icon className="size-5 shrink-0" />
+        <span className="sr-only">{item.label}</span>
       </button>
     );
   }

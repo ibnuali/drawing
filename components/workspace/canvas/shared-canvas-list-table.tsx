@@ -28,8 +28,8 @@ export function SharedCanvasListTable({ canvases, actions }: SharedCanvasListTab
       <div className="flex items-center gap-3 px-3 py-2 bg-muted/30 text-muted-foreground text-xs font-medium uppercase tracking-wider border-b border-border/60">
         <div className="w-5 shrink-0" />
         <div className="flex-1 min-w-0 text-left">Name</div>
-        <div className="w-24 shrink-0 text-left">Owner</div>
-        <div className="w-16 shrink-0 text-right">Modified</div>
+        <div className="w-24 shrink-0 text-left hidden sm:block">Owner</div>
+        <div className="w-16 shrink-0 text-right hidden sm:block">Modified</div>
         <div className="w-8 shrink-0" />
       </div>
       {isEmpty ? (

@@ -22,7 +22,7 @@ function ListSkeleton() {
       <div className="flex items-center gap-3 px-3 py-2 bg-muted/30 text-muted-foreground text-xs font-medium uppercase tracking-wider border-b border-border/60">
         <div className="w-5 shrink-0" />
         <div className="flex-1 min-w-0">Name</div>
-        <div className="w-16 shrink-0 text-right">Modified</div>
+        <div className="w-16 shrink-0 text-right hidden sm:block">Modified</div>
         <div className="w-8 shrink-0" />
       </div>
       {Array.from({ length: 8 }).map((_, i) => (
@@ -32,7 +32,7 @@ function ListSkeleton() {
         >
           <div className="bg-muted h-5 w-5 rounded shrink-0" />
           <div className="bg-muted h-4 flex-1 rounded" />
-          <div className="bg-muted h-3 w-16 rounded shrink-0" />
+          <div className="bg-muted h-3 w-16 rounded shrink-0 hidden sm:block" />
           <div className="w-8 shrink-0" />
         </div>
       ))}
@@ -82,7 +82,7 @@ export function CanvasListTable({
         <div className="flex items-center gap-3 px-3 py-2 bg-muted/30 text-muted-foreground text-xs font-medium uppercase tracking-wider border-b border-border/60">
           <div className="w-5 shrink-0" />
           <div className="flex-1 min-w-0">Name</div>
-          <div className="w-16 shrink-0 text-right">Modified</div>
+          <div className="w-16 shrink-0 text-right hidden sm:block">Modified</div>
           <div className="w-8 shrink-0" />
         </div>
         <div className="flex items-center justify-center py-8 text-muted-foreground text-sm">
@@ -97,7 +97,7 @@ export function CanvasListTable({
       <div className="flex items-center gap-3 px-3 py-2 bg-muted/30 text-muted-foreground text-xs font-medium uppercase tracking-wider border-b border-border/60">
         <div className="w-5 shrink-0" />
         <div className="flex-1 min-w-0">Name</div>
-        <div className="w-16 shrink-0 text-right">Modified</div>
+        <div className="w-16 shrink-0 text-right hidden sm:block">Modified</div>
         <div className="w-8 shrink-0" />
       </div>
       <div className="flex flex-col">

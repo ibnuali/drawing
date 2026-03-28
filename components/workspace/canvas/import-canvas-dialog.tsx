@@ -146,7 +146,7 @@ export function ImportCanvasDialog() {
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-w-md max-sm:max-w-[calc(100vw-32px)] max-sm:p-4">
         <AlertDialogHeader>
           <AlertDialogTitle>Import workspace</AlertDialogTitle>
           <AlertDialogDescription>
@@ -157,7 +157,7 @@ export function ImportCanvasDialog() {
         <div className="space-y-4">
           {/* File drop zone */}
           <div
-            className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+            className={`relative border-2 border-dashed rounded-lg p-6 max-sm:p-4 transition-colors ${
               isDragging
                 ? "border-primary bg-primary/5"
                 : "border-border hover:border-primary/50"
@@ -235,9 +235,9 @@ export function ImportCanvasDialog() {
           </Field>
         </div>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleSubmit} disabled={!parsedData}>
+        <AlertDialogFooter className="max-sm:flex-col max-sm:gap-2">
+          <AlertDialogCancel className="max-sm:w-full max-sm:min-h-[44px]">Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleSubmit} disabled={!parsedData} className="max-sm:w-full max-sm:min-h-[44px]">
             Import
           </AlertDialogAction>
         </AlertDialogFooter>

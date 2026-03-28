@@ -91,11 +91,11 @@ export function CanvasCard({
                   {canvas.title}
                 </span>
                 {isShared && (
-                  <span className="text-muted-foreground text-xs shrink-0 w-24 truncate text-left">
+                  <span className="text-muted-foreground text-xs shrink-0 w-24 truncate text-left hidden sm:block">
                     {ownerName ?? "Unknown"}
                   </span>
                 )}
-                <span className="text-muted-foreground text-xs shrink-0 w-16 text-right">
+                <span className="text-muted-foreground text-xs shrink-0 w-16 text-right hidden sm:block">
                   {formatRelativeDate(canvas.updatedAt)}
                 </span>
                 <div className="flex items-center gap-1 w-8 shrink-0">

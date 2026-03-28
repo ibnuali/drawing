@@ -38,7 +38,7 @@ export function CreateCanvasDialog() {
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogContent>
+      <AlertDialogContent className="max-sm:max-w-[calc(100vw-32px)] max-sm:p-4">
         <AlertDialogHeader>
           <AlertDialogTitle>New workspace</AlertDialogTitle>
           <AlertDialogDescription>
@@ -62,9 +62,9 @@ export function CreateCanvasDialog() {
             />
           </Field>
         </form>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleSubmit}>Create</AlertDialogAction>
+        <AlertDialogFooter className="max-sm:flex-col max-sm:gap-2">
+          <AlertDialogCancel className="max-sm:w-full max-sm:min-h-[44px]">Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleSubmit} className="max-sm:w-full max-sm:min-h-[44px]">Create</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

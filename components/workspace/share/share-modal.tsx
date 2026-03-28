@@ -37,12 +37,12 @@ export function ShareModal({ canvasId, isOpen, onClose, userId }: ShareModalProp
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <DialogContent
-        className="max-w-[600px] max-sm:max-w-[90vw] max-sm:p-4"
+        className="max-w-[600px] max-sm:max-w-[calc(100vw-32px)] max-sm:p-4"
         onKeyDown={(e) => e.stopPropagation()}
       >
         {/* Modal header with canvas title (Req 1.2) */}
         <DialogHeader>
-          <DialogTitle>Share &ldquo;{canvas.title}&rdquo;</DialogTitle>
+          <DialogTitle className="truncate">Share &ldquo;{canvas.title}&rdquo;</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -64,7 +64,7 @@ export function ShareModal({ canvasId, isOpen, onClose, userId }: ShareModalProp
 
         {/* Done button closes modal (Req 7.1) */}
         <DialogFooter>
-          <Button onClick={onClose} className="max-sm:min-h-[44px]">Done</Button>
+          <Button onClick={onClose} className="max-sm:min-h-[44px] max-sm:w-full">Done</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
