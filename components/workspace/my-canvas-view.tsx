@@ -91,7 +91,7 @@ export function MyCanvasView() {
       <ContextMenu>
         <ContextMenuTrigger
           render={
-            <div className="flex-1 flex flex-col w-full h-full">
+            <div className="flex-1 flex flex-col w-full min-h-0">
               {isLoading && <LoadingSkeleton />}
 
               {!isLoading && isSearching && (
