@@ -36,7 +36,7 @@ export function useWorkspaceActions() {
   const removeCategoryMut = useMutation(api.categories.remove);
   const reorderCategoryMut = useMutation(api.categories.reorder);
 
-  const handleCreate = async (title: string) => {
+  const handleCreate = async (title: string, templateData?: string) => {
     if (!session?.user) return;
     const categoryParam = searchParams.get("category");
     let categoryId: Id<"categories"> | undefined;
@@ -45,7 +45,7 @@ export function useWorkspaceActions() {
       if (category) categoryId = category._id;
     }
     try {
-      await createCanvas({ title, ownerId: session.user.id, categoryId });
+      await createCanvas({ title, ownerId: session.user.id, categoryId, data: templateData });
       toast.success("Canvas created");
     } catch {
       toast.error("Failed to create canvas");

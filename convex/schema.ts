@@ -67,4 +67,13 @@ export default defineSchema({
   })
     .index("by_canvas", ["canvasId"])
     .index("by_canvas_user", ["canvasId", "userId"]),
+
+  libraryItems: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    elements: v.string(), // JSON string of Excalidraw elements
+    thumbnailId: v.optional(v.id("_storage")),
+    createdById: v.optional(v.string()), // user who created it (optional)
+    createdAt: v.number(),
+  }),
 });

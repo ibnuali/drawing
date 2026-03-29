@@ -9,16 +9,18 @@ import type {
   BinaryFileData,
   NonDeletedExcalidrawElement,
   AppState,
+  LibraryItems,
 } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
 import { useTheme } from "next-themes";
-import { useMutation, useAction } from "convex/react";
+import { useMutation, useAction, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { SaveTracker } from "@/lib/save-tracker";
+import { useSession } from "@/lib/auth-client";
 
 export type ExcalidrawWrapperHandle = {
   /** Immediately save any pending changes. */
@@ -69,10 +71,14 @@ const ExcalidrawWrapper = React.forwardRef<
   ref,
 ) {
   const { resolvedTheme } = useTheme();
+  const { data: session } = useSession();
   const [excalidrawAPI, setExcalidrawAPI] =
     React.useState<ExcalidrawImperativeAPI | null>(null);
   const [lastSavedAt, setLastSavedAt] = React.useState<Date | null>(null);
   const uploadThumbnails = useAction(api.canvases.uploadThumbnails);
+
+  // Load library items from Convex (shared across all users)
+  const libraryItemsData = useQuery(api.libraryItems.list, {});
 
   React.useEffect(() => {
     if (excalidrawAPI && onExcalidrawAPI) {
@@ -101,10 +107,85 @@ const ExcalidrawWrapper = React.forwardRef<
     }
   }, [initialData]);
 
+  // Convert Convex library items to Excalidraw LibraryItems format
+  const libraryItems = React.useMemo((): LibraryItems | undefined => {
+    if (!libraryItemsData) return undefined;
+
+    const allItems: {
+      id: string;
+      status: "published";
+      elements: readonly NonDeletedExcalidrawElement[];
+      created: number;
+      name?: string;
+    }[] = [];
+
+    for (const item of libraryItemsData) {
+      try {
+        const parsed = JSON.parse(item.elements);
+
+        // Handle v1 .excalidrawlib format: { type: "excalidrawlib", library: [[elements], [elements], ...] }
+        if (parsed.type === "excalidrawlib" && Array.isArray(parsed.library)) {
+          // Each array in library is a separate library item (v1 format)
+          parsed.library.forEach((elementsArray: unknown[], index: number) => {
+            if (Array.isArray(elementsArray)) {
+              allItems.push({
+                id: `${item._id}-${index}`,
+                status: "published" as const,
+                elements: elementsArray as readonly NonDeletedExcalidrawElement[],
+                created: item.createdAt,
+                name: `${item.name} ${index + 1}`,
+              });
+            }
+          });
+        }
+        // Handle v2 format: { elements: [...] }
+        else if (Array.isArray(parsed)) {
+          allItems.push({
+            id: item._id,
+            status: "published" as const,
+            elements: parsed as readonly NonDeletedExcalidrawElement[],
+            created: item.createdAt,
+            name: item.name,
+          });
+        }
+        else if (Array.isArray(parsed.elements)) {
+          allItems.push({
+            id: item._id,
+            status: "published" as const,
+            elements: parsed.elements as readonly NonDeletedExcalidrawElement[],
+            created: item.createdAt,
+            name: item.name,
+          });
+        }
+      } catch {
+        // Skip invalid items
+      }
+    }
+
+    return allItems.length > 0 ? (allItems as LibraryItems) : undefined;
+  }, [libraryItemsData]);
+
+  // Merge initial scene with library items
+  const initialDataWithLibrary = React.useMemo(() => {
+    if (!initialScene && !libraryItems) return undefined;
+    return {
+      ...initialScene,
+      libraryItems,
+    };
+  }, [initialScene, libraryItems]);
+
   React.useEffect(() => {
     if (!excalidrawAPI || !collaborators) return;
     excalidrawAPI.updateScene({ collaborators });
   }, [excalidrawAPI, collaborators]);
+
+  // Update library when library items change
+  React.useEffect(() => {
+    if (!excalidrawAPI || !libraryItems) return;
+    excalidrawAPI.updateLibrary({
+      libraryItems,
+    });
+  }, [excalidrawAPI, libraryItems]);
 
   const generateThumbnail = React.useCallback(async (
     elements: readonly NonDeletedExcalidrawElement[],
@@ -234,7 +315,7 @@ const ExcalidrawWrapper = React.forwardRef<
     >
       <Excalidraw
         excalidrawAPI={(api) => setExcalidrawAPI(api)}
-        initialData={initialScene}
+        initialData={initialDataWithLibrary}
         viewModeEnabled={viewMode}
         isCollaborating={isCollaborating}
         onPointerUpdate={onPointerUpdate}

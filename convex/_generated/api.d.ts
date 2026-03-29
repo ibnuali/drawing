@@ -14,6 +14,7 @@ import type * as canvases from "../canvases.js";
 import type * as categories from "../categories.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
+import type * as libraryItems from "../libraryItems.js";
 import type * as presence from "../presence.js";
 import type * as users from "../users.js";
 
@@ -30,6 +31,7 @@ declare const fullApi: ApiFromModules<{
   categories: typeof categories;
   crons: typeof crons;
   http: typeof http;
+  libraryItems: typeof libraryItems;
   presence: typeof presence;
   users: typeof users;
 }>;
