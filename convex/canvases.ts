@@ -143,6 +143,15 @@ export const permanentDelete = mutation({
     const canvas = await ctx.db.get(args.id);
     if (!canvas) throw new Error("Canvas not found");
 
+    // Delete thumbnail blobs
+    if (canvas.thumbnailId) {
+      await ctx.storage.delete(canvas.thumbnailId);
+    }
+    if (canvas.thumbnailIdDark) {
+      await ctx.storage.delete(canvas.thumbnailIdDark);
+    }
+
+    // Delete access records
     const accessRecords = await ctx.db
       .query("access")
       .withIndex("by_canvas", (q) => q.eq("canvasId", args.id))
@@ -167,6 +176,14 @@ export const emptyTrash = mutation({
     const deletedCanvases = canvases.filter((c) => c.deletedAt !== undefined);
 
     for (const canvas of deletedCanvases) {
+      // Delete thumbnail blobs
+      if (canvas.thumbnailId) {
+        await ctx.storage.delete(canvas.thumbnailId);
+      }
+      if (canvas.thumbnailIdDark) {
+        await ctx.storage.delete(canvas.thumbnailIdDark);
+      }
+
       // Delete access records
       const accessRecords = await ctx.db
         .query("access")
