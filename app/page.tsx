@@ -4,7 +4,7 @@ import { XdrawIcon } from "@/components/xdraw-icon";
 import {
   Pencil,
   Users,
-  Shield,
+  FolderOpen,
   ArrowRight
 } from "lucide-react";
 
@@ -117,11 +117,11 @@ export default function LandingPage() {
 
               <li className="text-center">
                 <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                  <Shield className="h-5 w-5" aria-hidden="true" />
+                  <FolderOpen className="h-5 w-5" aria-hidden="true" />
                 </div>
-                <h3 className="font-medium mb-2">Secure</h3>
+                <h3 className="font-medium mb-2">Organize</h3>
                 <p className="text-sm text-muted-foreground">
-                  End-to-end encryption for your private canvases.
+                  Group canvases into categories. Stay organized.
                 </p>
               </li>
             </ul>
