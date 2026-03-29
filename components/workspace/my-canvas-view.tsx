@@ -83,17 +83,17 @@ export function MyCanvasView() {
     : filteredCanvases.length === 0;
 
   return (
-    <>
-      <div className="mb-6 flex items-center justify-between">
-        <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
-          My canvases
-        </p>
-        <ViewModeToggle />
-      </div>
-      <ContextMenu>
-        <ContextMenuTrigger
-          render={
-            <div className="flex-1 flex flex-col w-full min-h-0">
+    <ContextMenu>
+      <ContextMenuTrigger
+        render={
+          <div className="flex flex-col h-full w-full">
+            <div className="mb-6 flex items-center justify-between">
+              <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">
+                My canvases
+              </p>
+              <ViewModeToggle />
+            </div>
+            <div className="flex-1 flex flex-col min-h-0">
               {isLoading && <LoadingSkeleton />}
 
               {!isLoading && isSearching && (
@@ -106,7 +106,7 @@ export function MyCanvasView() {
               {!isLoading && !isSearching && (
                 <>
                   {showEmptyState ? (
-                    <div className="mt-16 flex flex-col items-center gap-2">
+                    <div className="flex-1 mt-16 flex flex-col items-center gap-2">
                       <p className="text-foreground text-sm font-medium">
                         {activeCategoryFilter
                           ? "No canvases in this category"
@@ -128,19 +128,19 @@ export function MyCanvasView() {
                 </>
               )}
             </div>
-          }
-        ></ContextMenuTrigger>
-        <ContextMenuContent className="w-48">
-          <ContextMenuItem onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="mr-2 size-4" />
-            New workspace
-          </ContextMenuItem>
-          <ContextMenuItem onClick={() => setImportDialogOpen(true)}>
-            <Upload className="mr-2 size-4" />
-            Import workspace
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
-    </>
+          </div>
+        }
+      ></ContextMenuTrigger>
+      <ContextMenuContent className="w-48">
+        <ContextMenuItem onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="mr-2 size-4" />
+          New workspace
+        </ContextMenuItem>
+        <ContextMenuItem onClick={() => setImportDialogOpen(true)}>
+          <Upload className="mr-2 size-4" />
+          Import workspace
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

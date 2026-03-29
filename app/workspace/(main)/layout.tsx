@@ -38,7 +38,7 @@ export function WorkspaceLayoutClient({ children }: { children: React.ReactNode 
       <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
         <WorkspaceSidebar />
 
-        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-2">
+        <main className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-2 flex flex-col">
           {children}
         </main>
       </div>
