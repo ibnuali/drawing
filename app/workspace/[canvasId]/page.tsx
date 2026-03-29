@@ -91,10 +91,10 @@ export default function CanvasPage() {
 
   React.useEffect(() => {
     if (resolvedCanvas?.title) {
-      document.title = `Drawing - ${resolvedCanvas.title}`;
+      document.title = `Xdraw - ${resolvedCanvas.title}`;
     }
     return () => {
-      document.title = "Drawing";
+      document.title = "Xdraw";
     };
   }, [resolvedCanvas?.title]);
 
