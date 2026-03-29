@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useMutation } from "convex/react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -29,17 +30,23 @@ export function LinkSettings({ canvasId, canvas }: LinkSettingsProps) {
 
   const handleAccessModeChange = (value: string | null) => {
     const enabled = value === "anyone";
-    updateLinkSettings({
-      canvasId,
-      linkAccessEnabled: enabled,
-      linkAccessLevel: "viewer",
-    });
+    try {
+      updateLinkSettings({
+        canvasId,
+        linkAccessEnabled: enabled,
+        linkAccessLevel: "viewer",
+      });
+      toast.success(enabled ? "Link sharing enabled" : "Link sharing disabled");
+    } catch {
+      toast.error("Failed to update link settings");
+    }
   };
 
   const handleCopyLink = () => {
     const url = `${window.location.origin}/canvas/${canvasId}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
+    toast.success("Link copied");
     setTimeout(() => setCopied(false), 2000);
   };
 

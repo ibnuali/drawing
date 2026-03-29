@@ -98,6 +98,29 @@ export const rename = mutation({
   },
 });
 
+export const duplicate = mutation({
+  args: { id: v.id("canvases") },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const canvas = await ctx.db.get(args.id);
+    if (!canvas) throw new Error("Canvas not found");
+
+    const newTitle = `${canvas.title} (Copy)`;
+
+    return await ctx.db.insert("canvases", {
+      title: newTitle,
+      ownerId: identity.subject,
+      data: canvas.data,
+      thumbnailId: canvas.thumbnailId,
+      thumbnailIdDark: canvas.thumbnailIdDark,
+      categoryId: canvas.categoryId,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id("canvases") },
   handler: async (ctx, args) => {

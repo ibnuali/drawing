@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useMutation } from "convex/react";
 import { useConvex } from "convex/react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Input } from "@/components/ui/input";
@@ -53,6 +54,7 @@ export function EmailInviteInput({ canvasId }: EmailInviteInputProps) {
 
       setEmail("");
       setError(null);
+      toast.success("Collaborator added");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to add collaborator";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAtomValue } from "jotai";
+import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { trashCanvasesAtom } from "@/lib/workspace-atoms";
 import { useMutation } from "convex/react";
@@ -105,15 +106,30 @@ export function TrashCanvasView() {
   const emptyTrash = useMutation(api.canvases.emptyTrash);
 
   const handleRestore = (id: Id<"canvases">) => {
-    restore({ id });
+    try {
+      restore({ id });
+      toast.success("Canvas restored");
+    } catch {
+      toast.error("Failed to restore canvas");
+    }
   };
 
   const handlePermanentDelete = (id: Id<"canvases">) => {
-    permanentDelete({ id });
+    try {
+      permanentDelete({ id });
+      toast.success("Canvas deleted permanently");
+    } catch {
+      toast.error("Failed to delete canvas");
+    }
   };
 
   const handleEmptyTrash = async (ownerId: string) => {
-    await emptyTrash({ ownerId });
+    try {
+      const count = await emptyTrash({ ownerId });
+      toast.success(`Deleted ${count} canvas(es)`);
+    } catch {
+      toast.error("Failed to empty trash");
+    }
   };
 
   const canvasCount = trashCanvases?.length ?? 0;

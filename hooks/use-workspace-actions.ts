@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "convex/react";
 import { useAtomValue, useSetAtom } from "jotai";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
@@ -25,6 +26,7 @@ export function useWorkspaceActions() {
   const setActiveTab = useSetAtom(activeTabAtom);
 
   const createCanvas = useMutation(api.canvases.create);
+  const duplicateCanvas = useMutation(api.canvases.duplicate);
   const removeCanvas = useMutation(api.canvases.remove);
   const renameCanvasMut = useMutation(api.canvases.rename);
   const togglePublicMut = useMutation(api.canvases.togglePublic);
@@ -42,46 +44,86 @@ export function useWorkspaceActions() {
       const category = categories.find((c) => c.name === categoryParam);
       if (category) categoryId = category._id;
     }
-    await createCanvas({ title, ownerId: session.user.id, categoryId });
+    try {
+      await createCanvas({ title, ownerId: session.user.id, categoryId });
+      toast.success("Canvas created");
+    } catch {
+      toast.error("Failed to create canvas");
+    }
   };
 
   const handleImport = async (title: string, data: string, categoryId?: string) => {
     if (!session?.user) return;
-    await createCanvas({
-      title,
-      ownerId: session.user.id,
-      categoryId: categoryId as Id<"categories"> | undefined,
-      data,
-    });
+    try {
+      await createCanvas({
+        title,
+        ownerId: session.user.id,
+        categoryId: categoryId as Id<"categories"> | undefined,
+        data,
+      });
+      toast.success("Canvas imported");
+    } catch {
+      toast.error("Failed to import canvas");
+    }
   };
 
   const handleDelete = (e: React.MouseEvent, id: Id<"canvases">) => {
     e.stopPropagation();
-    void removeCanvas({ id });
+    try {
+      void removeCanvas({ id });
+      toast.success("Canvas moved to trash");
+    } catch {
+      toast.error("Failed to delete canvas");
+    }
   };
 
   const handleRename = (id: Id<"canvases">) => setRenameTarget(id);
 
+  const handleDuplicate = (id: Id<"canvases">) => {
+    try {
+      void duplicateCanvas({ id });
+      toast.success("Canvas duplicated");
+    } catch {
+      toast.error("Failed to duplicate canvas");
+    }
+  };
+
   const handleRenameConfirm = (newTitle: string, id: Id<"canvases">) => {
-    renameCanvasMut({ id, title: newTitle });
+    try {
+      renameCanvasMut({ id, title: newTitle });
+      toast.success("Canvas renamed");
+    } catch {
+      toast.error("Failed to rename canvas");
+    }
   };
 
   const handleTogglePublic = (id: Id<"canvases">) => {
-    void togglePublicMut({ id });
+    try {
+      void togglePublicMut({ id });
+      toast.success("Visibility updated");
+    } catch {
+      toast.error("Failed to update visibility");
+    }
   };
 
   const handleCopyCollabLink = (id: Id<"canvases">) => {
     navigator.clipboard.writeText(`${window.location.origin}/workspace/${id}`);
+    toast.success("Link copied to clipboard");
   };
 
   const handleMoveCanvas = (
     canvasId: Id<"canvases">,
     categoryId: string | undefined,
   ) => {
-    assignCategoryMut({
-      canvasId,
-      categoryId: categoryId as Id<"categories"> | undefined,
-    });
+    try {
+      assignCategoryMut({
+        canvasId,
+        categoryId: categoryId as Id<"categories"> | undefined,
+      });
+      toast.success("Canvas moved");
+    } catch {
+      toast.error("Failed to move canvas");
+    }
   };
 
   const handleOpenCanvas = (id: Id<"canvases">) => {
@@ -90,11 +132,21 @@ export function useWorkspaceActions() {
 
   // Category actions
   const handleCreateCategory = (name: string) => {
-    createCategoryMut({ name });
+    try {
+      createCategoryMut({ name });
+      toast.success("Category created");
+    } catch {
+      toast.error("Failed to create category");
+    }
   };
 
   const handleRenameCategory = (newName: string, id: Id<"categories">) => {
-    renameCategoryMut({ id, name: newName });
+    try {
+      renameCategoryMut({ id, name: newName });
+      toast.success("Category renamed");
+    } catch {
+      toast.error("Failed to rename category");
+    }
   };
 
   const handleDeleteCategory = (id: Id<"categories">) => {
@@ -102,9 +154,14 @@ export function useWorkspaceActions() {
   };
 
   const handleConfirmDeleteCategory = (id: Id<"categories">) => {
-    removeCategoryMut({ id });
-    setActiveTab((prev) => (prev === id ? "all" : prev));
-    setDeleteCategoryTarget(null);
+    try {
+      removeCategoryMut({ id });
+      setActiveTab((prev) => (prev === id ? "all" : prev));
+      setDeleteCategoryTarget(null);
+      toast.success("Category deleted");
+    } catch {
+      toast.error("Failed to delete category");
+    }
   };
 
   const handleMoveUp = (id: Id<"categories">) => {
@@ -126,6 +183,7 @@ export function useWorkspaceActions() {
     onOpen: handleOpenCanvas,
     onDelete: handleDelete,
     onRename: handleRename,
+    onDuplicate: handleDuplicate,
     onTogglePublic: handleTogglePublic,
     onCopyCollabLink: handleCopyCollabLink,
     onMoveToCategory: handleMoveCanvas,

@@ -88,7 +88,7 @@ export function NavItem({
       onClick={() => onNavClick(item.id)}
       className={cn(
         "flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-        "hover:bg-accent hover:text-accent-foreground",
+        "hover:bg-muted/50",
         isActive && activeCategoryFilter === null
           ? "bg-primary/10 text-primary"
           : "text-muted-foreground",

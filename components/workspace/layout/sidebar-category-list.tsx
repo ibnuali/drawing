@@ -54,7 +54,7 @@ export function CategoryItem({
             onClick={onClick}
             className={cn(
               "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors cursor-pointer truncate",
-              "hover:bg-accent hover:text-accent-foreground",
+              "hover:bg-muted/50",
               isActive
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground",

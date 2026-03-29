@@ -128,7 +128,7 @@ export function WorkspaceSidebar() {
           <div className="my-2 border-t border-border/60" />
           <button
             onClick={() => setCreateCategoryOpen(true)}
-            className="text-muted-foreground hover:text-foreground hover:bg-accent flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors"
+            className="text-muted-foreground hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors"
           >
             <Plus className="size-3.5 shrink-0" />
             New category

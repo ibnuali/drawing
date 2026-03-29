@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation } from "convex/react";
+import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -53,12 +54,22 @@ export function CollaboratorList({
             collaborator={collab}
             ownerId={ownerId}
             isCurrentUserOwner={isOwner}
-            onUpdateAccessLevel={(userId, accessLevel) =>
-              updateAccessLevel({ canvasId, userId, accessLevel })
-            }
-            onRemove={(userId) =>
-              removeCollaborator({ canvasId, userId })
-            }
+            onUpdateAccessLevel={(userId, accessLevel) => {
+              try {
+                updateAccessLevel({ canvasId, userId, accessLevel });
+                toast.success("Access level updated");
+              } catch {
+                toast.error("Failed to update access level");
+              }
+            }}
+            onRemove={(userId) => {
+              try {
+                removeCollaborator({ canvasId, userId });
+                toast.success("Collaborator removed");
+              } catch {
+                toast.error("Failed to remove collaborator");
+              }
+            }}
           />
         ))}
       </div>

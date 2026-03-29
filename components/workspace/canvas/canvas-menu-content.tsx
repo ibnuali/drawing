@@ -7,7 +7,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuSubContent,
 } from "@/components/ui/context-menu";
-import { Pencil, Trash2, Globe, Lock, Link, FolderInput } from "lucide-react";
+import { Pencil, Trash2, Globe, Lock, Link, FolderInput, Copy } from "lucide-react";
 import type { CanvasActions } from "@/lib/workspace-atoms";
 
 type CategoryOption = {
@@ -39,6 +39,10 @@ export function CanvasMenuContent({
       <ContextMenuItem onClick={() => actions?.onRename(canvasId)}>
         <Pencil />
         Rename
+      </ContextMenuItem>
+      <ContextMenuItem onClick={() => actions?.onDuplicate(canvasId)}>
+        <Copy />
+        Duplicate
       </ContextMenuItem>
       <ContextMenuItem onClick={() => actions?.onTogglePublic(canvasId)}>
         {isPublic ? <Lock /> : <Globe />}

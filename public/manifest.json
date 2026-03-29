@@ -25,14 +25,5 @@
       "type": "image/svg+xml"
     }
   ],
-  "categories": ["productivity", "utilities"],
-  "screenshots": [
-    {
-      "src": "/og-image.png",
-      "sizes": "1200x630",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Xdraw collaborative whiteboard interface"
-    }
-  ]
+  "categories": ["productivity", "utilities"]
 }

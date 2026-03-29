@@ -70,6 +70,7 @@ export type CanvasActions = {
   onOpen: (id: Id<"canvases">) => void;
   onDelete: (e: React.MouseEvent, id: Id<"canvases">) => void;
   onRename: (id: Id<"canvases">) => void;
+  onDuplicate: (id: Id<"canvases">) => void;
   onTogglePublic: (id: Id<"canvases">) => void;
   onCopyCollabLink: (id: Id<"canvases">) => void;
   onMoveToCategory: (canvasId: Id<"canvases">, categoryId: string | undefined) => void;
