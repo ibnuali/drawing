@@ -15,11 +15,13 @@ type CanvasContextMenuProps = {
   canvasId?: Id<"canvases">;
   isPublic?: boolean;
   isCollabEnabled?: boolean;
+  isFavorite?: boolean;
   actions?: CanvasActions;
   categories?: { _id: string; name: string }[];
   onNewWorkspace: () => void;
   onImportWorkspace: () => void;
   onDeleteClick?: () => void;
+  onToggleFavorite?: (id: Id<"canvases">) => void;
   copyPublicLink?: (e: React.MouseEvent) => void;
 };
 
@@ -28,11 +30,13 @@ export function CanvasContextMenu({
   canvasId,
   isPublic = false,
   isCollabEnabled = false,
+  isFavorite = false,
   actions,
   categories,
   onNewWorkspace,
   onImportWorkspace,
   onDeleteClick,
+  onToggleFavorite,
   copyPublicLink,
 }: Readonly<CanvasContextMenuProps>) {
   return (
@@ -61,9 +65,11 @@ export function CanvasContextMenu({
               canvasId={canvasId}
               isPublic={isPublic}
               isCollabEnabled={isCollabEnabled}
+              isFavorite={isFavorite}
               actions={actions}
               categories={categories}
               onDeleteClick={onDeleteClick ?? (() => {})}
+              onToggleFavorite={onToggleFavorite}
               copyPublicLink={copyPublicLink ?? ((e) => {})}
             />
           </>

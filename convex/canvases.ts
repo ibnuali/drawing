@@ -5,15 +5,27 @@ import type { Id } from "./_generated/dataModel";
 import { paginationOptsValidator } from "convex/server";
 
 export const list = query({
-  args: { ownerId: v.string(), search: v.optional(v.string()) },
+  args: { ownerId: v.string(), search: v.optional(v.string()), favoritesOnly: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
-    const canvases = await ctx.db
-      .query("canvases")
-      .withIndex("by_owner_deleted", (q) =>
-        q.eq("ownerId", args.ownerId).eq("deletedAt", undefined)
-      )
-      .order("desc")
-      .collect();
+    let canvases;
+    if (args.favoritesOnly) {
+      canvases = await ctx.db
+        .query("canvases")
+        .withIndex("by_owner_favorite", (q) =>
+          q.eq("ownerId", args.ownerId).eq("isFavorite", true)
+        )
+        .filter((q) => q.eq(q.field("deletedAt"), undefined))
+        .order("desc")
+        .collect();
+    } else {
+      canvases = await ctx.db
+        .query("canvases")
+        .withIndex("by_owner_deleted", (q) =>
+          q.eq("ownerId", args.ownerId).eq("deletedAt", undefined)
+        )
+        .order("desc")
+        .collect();
+    }
 
     if (!args.search) return canvases;
 
@@ -117,6 +129,7 @@ export const duplicate = mutation({
       thumbnailIdDark: canvas.thumbnailIdDark,
       categoryId: canvas.categoryId,
       updatedAt: Date.now(),
+      // Don't copy isFavorite - duplicates start unfavorite
     });
   },
 });
@@ -223,6 +236,17 @@ export const togglePublic = mutation({
     const isPublic = !canvas.isPublic;
     await ctx.db.patch(args.id, { isPublic });
     return isPublic;
+  },
+});
+
+export const toggleFavorite = mutation({
+  args: { id: v.id("canvases") },
+  handler: async (ctx, args) => {
+    const canvas = await ctx.db.get(args.id);
+    if (!canvas) throw new Error("Canvas not found");
+    const isFavorite = !canvas.isFavorite;
+    await ctx.db.patch(args.id, { isFavorite });
+    return isFavorite;
   },
 });
 

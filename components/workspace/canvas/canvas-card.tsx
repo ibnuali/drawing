@@ -2,11 +2,11 @@
 
 import * as React from "react";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useTheme } from "next-themes";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
-import { Pencil, Globe, Users, File } from "lucide-react";
+import { Pencil, Globe, Users, File, Star } from "lucide-react";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import type { CanvasActions, CollaboratorInfo } from "@/lib/workspace-atoms";
 import { CanvasMenuContent, type CategoryOption } from "./canvas-menu-content";
@@ -24,6 +24,7 @@ type CanvasCardProps = {
   accessLevel?: "editor" | "viewer";
   categories?: CategoryOption[];
   isList?: boolean;
+  onToggleFavorite?: (id: Id<"canvases">) => void;
 };
 
 export function CanvasCard({
@@ -35,12 +36,14 @@ export function CanvasCard({
   accessLevel,
   categories,
   isList,
+  onToggleFavorite,
 }: Readonly<CanvasCardProps>) {
   const { resolvedTheme } = useTheme();
   const [deleteOpen, setDeleteOpen] = React.useState(false);
   const pendingDeleteEvent = React.useRef<React.MouseEvent | null>(null);
   const isPublic = canvas.isPublic === true;
   const isCollabEnabled = canvas.collaborationEnabled === true;
+  const isFavorite = canvas.isFavorite === true;
 
   // Fetch theme-appropriate thumbnail URL
   const hasThumbnail = canvas.thumbnailId || canvas.thumbnailIdDark;
@@ -63,13 +66,20 @@ export function CanvasCard({
     setDeleteOpen(true);
   };
 
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleFavorite?.(canvas._id);
+  };
+
   const menuProps = {
     canvasId: canvas._id,
     isPublic,
     isCollabEnabled,
+    isFavorite,
     actions,
     categories,
     onDeleteClick: handleDeleteClick,
+    onToggleFavorite,
     copyPublicLink,
   };
 
@@ -99,6 +109,9 @@ export function CanvasCard({
                   {formatRelativeDate(canvas.updatedAt)}
                 </span>
                 <div className="flex items-center gap-1 w-8 shrink-0">
+                  {isFavorite && (
+                    <Star className="text-yellow-500 size-3.5 shrink-0 fill-yellow-500" />
+                  )}
                   {isPublic && (
                     <Globe className="text-muted-foreground/60 size-3.5 shrink-0" />
                   )}
@@ -183,6 +196,9 @@ export function CanvasCard({
                   isPublic={isPublic}
                   isCollabEnabled={isCollabEnabled}
                 />
+                {isFavorite && (
+                  <Star className="absolute top-2 right-2 text-yellow-500 size-4 fill-yellow-500" />
+                )}
                 <CanvasCollaboratorAvatars collaborators={collaborators} />
               </div>
 

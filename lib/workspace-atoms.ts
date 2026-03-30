@@ -74,4 +74,5 @@ export type CanvasActions = {
   onTogglePublic: (id: Id<"canvases">) => void;
   onCopyCollabLink: (id: Id<"canvases">) => void;
   onMoveToCategory: (canvasId: Id<"canvases">, categoryId: string | undefined) => void;
+  onToggleFavorite: (id: Id<"canvases">) => void;
 };

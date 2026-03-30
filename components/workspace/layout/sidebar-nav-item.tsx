@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Users, Trash2 } from "lucide-react";
+import { LayoutDashboard, Users, Trash2, Star } from "lucide-react";
 import Link from "next/link";
 import type { SidebarView } from "./workspace-sidebar";
 
@@ -16,6 +16,12 @@ export const navItems: {
     label: "My Canvas",
     icon: LayoutDashboard,
     href: "/workspace/my-canvas",
+  },
+  {
+    id: "favorites",
+    label: "Favorites",
+    icon: Star,
+    href: "/workspace/favorites",
   },
   {
     id: "shared",

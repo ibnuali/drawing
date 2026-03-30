@@ -108,6 +108,7 @@ export function CanvasListTable({
             actions={actions}
             collaborators={collaborators?.[canvas._id]}
             categories={categories}
+            onToggleFavorite={actions.onToggleFavorite}
             isList
           />
         ))}

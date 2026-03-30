@@ -52,6 +52,7 @@ export function SearchResults({
             actions={actions.canvasActions}
             collaborators={activeCollaborators?.[canvas._id]}
             categories={categoryOptions}
+            onToggleFavorite={actions.canvasActions.onToggleFavorite}
             isList={viewMode === "list"}
           />
         </div>

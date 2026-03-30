@@ -7,7 +7,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuSubContent,
 } from "@/components/ui/context-menu";
-import { Pencil, Trash2, Globe, Lock, Link, FolderInput, Copy } from "lucide-react";
+import { Pencil, Trash2, Globe, Lock, Link, FolderInput, Copy, Star } from "lucide-react";
 import type { CanvasActions } from "@/lib/workspace-atoms";
 
 type CategoryOption = {
@@ -19,9 +19,11 @@ type CanvasMenuContentProps = {
   canvasId: Id<"canvases">;
   isPublic: boolean;
   isCollabEnabled: boolean;
+  isFavorite: boolean;
   actions?: CanvasActions;
   categories?: CategoryOption[];
   onDeleteClick: () => void;
+  onToggleFavorite?: (id: Id<"canvases">) => void;
   copyPublicLink: (e: React.MouseEvent) => void;
 };
 
@@ -29,13 +31,19 @@ export function CanvasMenuContent({
   canvasId,
   isPublic,
   isCollabEnabled,
+  isFavorite,
   actions,
   categories,
   onDeleteClick,
+  onToggleFavorite,
   copyPublicLink,
 }: Readonly<CanvasMenuContentProps>) {
   return (
     <ContextMenuContent>
+      <ContextMenuItem onClick={() => onToggleFavorite?.(canvasId)}>
+        <Star className={isFavorite ? "fill-yellow-500 text-yellow-500" : ""} />
+        {isFavorite ? "Remove from favorites" : "Add to favorites"}
+      </ContextMenuItem>
       <ContextMenuItem onClick={() => actions?.onRename(canvasId)}>
         <Pencil />
         Rename

@@ -30,6 +30,7 @@ export function useWorkspaceActions() {
   const removeCanvas = useMutation(api.canvases.remove);
   const renameCanvasMut = useMutation(api.canvases.rename);
   const togglePublicMut = useMutation(api.canvases.togglePublic);
+  const toggleFavoriteMut = useMutation(api.canvases.toggleFavorite);
   const assignCategoryMut = useMutation(api.canvases.assignCategory);
   const createCategoryMut = useMutation(api.categories.create);
   const renameCategoryMut = useMutation(api.categories.rename);
@@ -103,6 +104,14 @@ export function useWorkspaceActions() {
       toast.success("Visibility updated");
     } catch {
       toast.error("Failed to update visibility");
+    }
+  };
+
+  const handleToggleFavorite = (id: Id<"canvases">) => {
+    try {
+      void toggleFavoriteMut({ id });
+    } catch {
+      toast.error("Failed to update favorite");
     }
   };
 
@@ -187,6 +196,7 @@ export function useWorkspaceActions() {
     onTogglePublic: handleTogglePublic,
     onCopyCollabLink: handleCopyCollabLink,
     onMoveToCategory: handleMoveCanvas,
+    onToggleFavorite: handleToggleFavorite,
   };
 
   return {
@@ -197,6 +207,7 @@ export function useWorkspaceActions() {
     handleRename,
     handleRenameConfirm,
     handleTogglePublic,
+    handleToggleFavorite,
     handleCopyCollabLink,
     handleMoveCanvas,
     handleOpenCanvas,
