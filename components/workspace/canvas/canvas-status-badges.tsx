@@ -1,10 +1,10 @@
 import { Globe, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type CanvasStatusBadgesProps = {
+interface CanvasStatusBadgesProps {
   isPublic: boolean;
   isCollabEnabled: boolean;
-};
+}
 
 export function CanvasStatusBadges({
   isPublic,

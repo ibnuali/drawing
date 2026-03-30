@@ -9,13 +9,9 @@ import {
 } from "@/components/ui/context-menu";
 import { Pencil, Trash2, Globe, Lock, Link, FolderInput, Copy, Star } from "lucide-react";
 import type { CanvasActions } from "@/lib/workspace-atoms";
+import type { CategoryOption } from "@/lib/types";
 
-type CategoryOption = {
-  _id: string;
-  name: string;
-};
-
-type CanvasMenuContentProps = {
+interface CanvasMenuContentProps {
   canvasId: Id<"canvases">;
   isPublic: boolean;
   isCollabEnabled: boolean;
@@ -25,7 +21,7 @@ type CanvasMenuContentProps = {
   onDeleteClick: () => void;
   onToggleFavorite?: (id: Id<"canvases">) => void;
   copyPublicLink: (e: React.MouseEvent) => void;
-};
+}
 
 export function CanvasMenuContent({
   canvasId,
@@ -97,5 +93,3 @@ export function CanvasMenuContent({
     </ContextMenuContent>
   );
 }
-
-export type { CategoryOption };

@@ -4,7 +4,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { CanvasCard } from "./canvas-card";
 import type { CanvasActions } from "@/lib/workspace-atoms";
 
-type SharedCanvasResult = {
+interface SharedCanvasResult {
   _id: Id<"canvases">;
   title: string;
   updatedAt: number;
@@ -13,14 +13,14 @@ type SharedCanvasResult = {
   accessLevel: "editor" | "viewer";
   ownerName: string;
   ownerId: string;
-};
+}
 
-type SharedCanvasListTableProps = {
+interface SharedCanvasListTableProps {
   canvases: SharedCanvasResult[];
   actions: CanvasActions;
-};
+}
 
-export function SharedCanvasListTable({ canvases, actions }: SharedCanvasListTableProps) {
+export function SharedCanvasListTable({ canvases, actions }: Readonly<SharedCanvasListTableProps>) {
   const isEmpty = canvases.length === 0;
 
   return (

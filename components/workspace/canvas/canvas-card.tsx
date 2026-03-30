@@ -2,20 +2,21 @@
 
 import * as React from "react";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useTheme } from "next-themes";
 import { ContextMenu, ContextMenuTrigger } from "@/components/ui/context-menu";
 import { Pencil, Globe, Users, File, Star } from "lucide-react";
 import { cn, formatRelativeDate } from "@/lib/utils";
 import type { CanvasActions, CollaboratorInfo } from "@/lib/workspace-atoms";
-import { CanvasMenuContent, type CategoryOption } from "./canvas-menu-content";
+import type { CategoryOption } from "@/lib/types";
+import { CanvasMenuContent } from "./canvas-menu-content";
 import { CanvasDeleteDialog } from "./canvas-delete-dialog";
 import { CanvasCollaboratorAvatars } from "./canvas-collaborator-avatars";
 import { CanvasStatusBadges } from "./canvas-status-badges";
 import { CanvasSharedInfo } from "./canvas-shared-info";
 
-type CanvasCardProps = {
+interface CanvasCardProps {
   canvas: Doc<"canvases">;
   actions?: CanvasActions;
   collaborators?: CollaboratorInfo;
@@ -25,7 +26,80 @@ type CanvasCardProps = {
   categories?: CategoryOption[];
   isList?: boolean;
   onToggleFavorite?: (id: Id<"canvases">) => void;
-};
+}
+
+interface CanvasThumbnailProps {
+  canvasId: Id<"canvases">;
+  thumbnailUrl: string | null | undefined;
+  title: string;
+}
+
+/** Renders the thumbnail or placeholder grid pattern for a canvas card */
+function CanvasThumbnail({ canvasId, thumbnailUrl, title }: Readonly<CanvasThumbnailProps>) {
+  if (thumbnailUrl) {
+    return (
+      <img
+        src={thumbnailUrl}
+        alt={title}
+        className="size-full object-contain bg-muted/30"
+      />
+    );
+  }
+
+  return (
+    <>
+      <svg
+        className="text-border/80 absolute inset-0 size-full"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <pattern
+            id={`grid-${canvasId}`}
+            width="20"
+            height="20"
+            patternUnits="userSpaceOnUse"
+          >
+            <path
+              d="M 20 0 L 0 0 0 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.5"
+            />
+          </pattern>
+        </defs>
+        <rect
+          width="100%"
+          height="100%"
+          fill={`url(#grid-${canvasId})`}
+        />
+      </svg>
+      <Pencil className="text-muted-foreground/20 relative size-10" />
+    </>
+  );
+}
+
+interface StatusIconsProps {
+  isFavorite: boolean;
+  isPublic: boolean;
+  isCollabEnabled: boolean;
+}
+
+/** Compact status icons for list view */
+function StatusIcons({ isFavorite, isPublic, isCollabEnabled }: Readonly<StatusIconsProps>) {
+  return (
+    <div className="flex items-center gap-1 w-8 shrink-0">
+      {isFavorite && (
+        <Star className="text-yellow-500 size-3.5 shrink-0 fill-yellow-500" />
+      )}
+      {isPublic && (
+        <Globe className="text-muted-foreground/60 size-3.5 shrink-0" />
+      )}
+      {isCollabEnabled && (
+        <Users className="text-muted-foreground/60 size-3.5 shrink-0" />
+      )}
+    </div>
+  );
+}
 
 export function CanvasCard({
   canvas,
@@ -66,11 +140,6 @@ export function CanvasCard({
     setDeleteOpen(true);
   };
 
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleFavorite?.(canvas._id);
-  };
-
   const menuProps = {
     canvasId: canvas._id,
     isPublic,
@@ -108,21 +177,15 @@ export function CanvasCard({
                 <span className="text-muted-foreground text-xs shrink-0 w-16 text-right hidden sm:block">
                   {formatRelativeDate(canvas.updatedAt)}
                 </span>
-                <div className="flex items-center gap-1 w-8 shrink-0">
-                  {isFavorite && (
-                    <Star className="text-yellow-500 size-3.5 shrink-0 fill-yellow-500" />
-                  )}
-                  {isPublic && (
-                    <Globe className="text-muted-foreground/60 size-3.5 shrink-0" />
-                  )}
-                  {isCollabEnabled && (
-                    <Users className="text-muted-foreground/60 size-3.5 shrink-0" />
-                  )}
-                </div>
+                <StatusIcons
+                  isFavorite={isFavorite}
+                  isPublic={isPublic}
+                  isCollabEnabled={isCollabEnabled}
+                />
               </button>
             }
             className="w-full"
-          ></ContextMenuTrigger>
+          />
           <CanvasMenuContent {...menuProps} />
         </ContextMenu>
         {!isShared && (
@@ -152,45 +215,16 @@ export function CanvasCard({
               onClick={() => actions?.onOpen(canvas._id)}
             >
               <div
-                className={`relative flex h-36 items-center justify-center overflow-hidden ${thumbnailUrl ? "" : "bg-muted/40"}`}
-              >
-                {thumbnailUrl ? (
-                  <img
-                    src={thumbnailUrl}
-                    alt={canvas.title}
-                    className="size-full object-contain bg-muted/30"
-                  />
-                ) : (
-                  <>
-                    <svg
-                      className="text-border/80 absolute inset-0 size-full"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <defs>
-                        <pattern
-                          id={`grid-${canvas._id}`}
-                          width="20"
-                          height="20"
-                          patternUnits="userSpaceOnUse"
-                        >
-                          <path
-                            d="M 20 0 L 0 0 0 20"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="0.5"
-                          />
-                        </pattern>
-                      </defs>
-                      <rect
-                        width="100%"
-                        height="100%"
-                        fill={`url(#grid-${canvas._id})`}
-                      />
-                    </svg>
-
-                    <Pencil className="text-muted-foreground/20 relative size-10" />
-                  </>
+                className={cn(
+                  "relative flex h-36 items-center justify-center overflow-hidden",
+                  !thumbnailUrl && "bg-muted/40"
                 )}
+              >
+                <CanvasThumbnail
+                  canvasId={canvas._id}
+                  thumbnailUrl={thumbnailUrl}
+                  title={canvas.title}
+                />
 
                 <CanvasStatusBadges
                   isPublic={isPublic}
@@ -203,7 +237,7 @@ export function CanvasCard({
               </div>
 
               <div className="flex flex-col gap-0.5 px-3 py-2.5 text-left">
-                <span className="text-foreground truncate text-sm font-medium ">
+                <span className="text-foreground truncate text-sm font-medium">
                   {canvas.title}
                 </span>
                 <span className="text-muted-foreground text-xs">
@@ -218,7 +252,7 @@ export function CanvasCard({
             </button>
           }
           className="w-full"
-        ></ContextMenuTrigger>
+        />
         <CanvasMenuContent {...menuProps} />
       </ContextMenu>
       {!isShared && (

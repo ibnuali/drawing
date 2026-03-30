@@ -1,12 +1,12 @@
 import type { CollaboratorInfo } from "@/lib/workspace-atoms";
 
-type CanvasCollaboratorAvatarsProps = {
+interface CanvasCollaboratorAvatarsProps {
   collaborators?: CollaboratorInfo;
-};
+}
 
 export function CanvasCollaboratorAvatars({
   collaborators,
-}: CanvasCollaboratorAvatarsProps) {
+}: Readonly<CanvasCollaboratorAvatarsProps>) {
   if (!collaborators || collaborators.count === 0) return null;
 
   return (

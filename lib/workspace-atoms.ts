@@ -2,6 +2,19 @@ import { atom } from "jotai";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import type { SidebarView } from "@/components/workspace/layout/workspace-sidebar";
 
+/**
+ * Jotai atoms for workspace state management.
+ *
+ * These atoms provide reactive state for the workspace UI including:
+ * - UI state (view mode, search, sidebar)
+ * - Dialog state (create, rename, delete dialogs)
+ * - Server data (canvases, categories, shared canvases)
+ * - Derived data (sorted categories, category options)
+ *
+ * Data flows from Convex queries (via useWorkspaceSync hook) into these atoms,
+ * which are then consumed by child components without prop drilling.
+ */
+
 // ── UI state atoms ──
 
 export const sidebarViewAtom = atom<SidebarView>("my-canvas");

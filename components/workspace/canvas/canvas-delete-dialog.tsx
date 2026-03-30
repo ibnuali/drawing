@@ -11,14 +11,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type CanvasDeleteDialogProps = {
+interface CanvasDeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   canvasId: Id<"canvases">;
   onDelete?: (e: React.MouseEvent, id: Id<"canvases">) => void;
   pendingDeleteEvent: React.MutableRefObject<React.MouseEvent | null>;
-};
+}
 
 export function CanvasDeleteDialog({
   open,

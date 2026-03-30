@@ -12,7 +12,7 @@ interface ShareButtonProps {
   userId: string;
 }
 
-export function ShareButton({ canvasId, isOwner, userId }: ShareButtonProps) {
+export function ShareButton({ canvasId, isOwner, userId }: Readonly<ShareButtonProps>) {
   const [isOpen, setIsOpen] = React.useState(false);
 
   // Req 1.3: Only canvas owners see the Share button

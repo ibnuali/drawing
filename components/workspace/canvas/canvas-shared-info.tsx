@@ -1,16 +1,16 @@
 import { Badge } from "@/components/ui/badge";
 
-type CanvasSharedInfoProps = {
+interface CanvasSharedInfoProps {
   isShared?: boolean;
   ownerName?: string;
   accessLevel?: "editor" | "viewer";
-};
+}
 
 export function CanvasSharedInfo({
   isShared,
   ownerName,
   accessLevel,
-}: CanvasSharedInfoProps) {
+}: Readonly<CanvasSharedInfoProps>) {
   if (!isShared) return null;
 
   return (
