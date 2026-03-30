@@ -15,10 +15,12 @@ export default defineSchema({
     updatedAt: v.number(),
     categoryId: v.optional(v.id("categories")),
     deletedAt: v.optional(v.number()),
+    isFavorite: v.optional(v.boolean()),
   })
     .index("by_owner", ["ownerId"])
     .index("by_category", ["categoryId"])
-    .index("by_owner_deleted", ["ownerId", "deletedAt"]),
+    .index("by_owner_deleted", ["ownerId", "deletedAt"])
+    .index("by_owner_favorite", ["ownerId", "isFavorite"]),
 
   categories: defineTable({
     name: v.string(),

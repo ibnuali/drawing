@@ -17,9 +17,10 @@ interface CanvasGridRendererProps {
   items: Doc<"canvases">[];
   actions: CanvasActions;
   categoryId?: Id<"categories">;
+  categoryNameMap?: Map<string, string>;
 }
 
-export function CanvasGridRenderer({ items, actions, categoryId }: Readonly<CanvasGridRendererProps>) {
+export function CanvasGridRenderer({ items, actions, categoryId, categoryNameMap }: Readonly<CanvasGridRendererProps>) {
   const viewMode = useAtomValue(canvasViewModeAtom);
   const activeCollaborators = useAtomValue(activeCollaboratorsAtom);
   const categoryOptions = useAtomValue(categoryOptionsAtom);
@@ -48,6 +49,7 @@ export function CanvasGridRenderer({ items, actions, categoryId }: Readonly<Canv
             actions={actions}
             collaborators={activeCollaborators?.[canvas._id]}
             categories={categoryOptions}
+            onToggleFavorite={actions.onToggleFavorite}
             isList
           />
         ))}
@@ -64,6 +66,7 @@ export function CanvasGridRenderer({ items, actions, categoryId }: Readonly<Canv
           actions={actions}
           collaborators={activeCollaborators?.[canvas._id]}
           categories={categoryOptions}
+          onToggleFavorite={actions.onToggleFavorite}
         />
       ))}
     </div>

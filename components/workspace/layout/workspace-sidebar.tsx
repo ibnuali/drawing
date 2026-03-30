@@ -14,7 +14,7 @@ import { useWorkspaceActions } from "@/hooks/use-workspace-actions";
 import { CategorySkeleton, CategoryItem } from "./sidebar-category-list";
 import { NavItem, navItems } from "./sidebar-nav-item";
 
-export type SidebarView = "my-canvas" | "shared" | "trash";
+export type SidebarView = "my-canvas" | "favorites" | "shared" | "trash";
 
 export function WorkspaceSidebar() {
   const pathname = usePathname();
