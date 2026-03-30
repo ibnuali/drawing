@@ -9,21 +9,22 @@ import { Plus, Upload } from "lucide-react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { CanvasMenuContent } from "@/components/workspace/canvas/canvas-menu-content";
 import type { CanvasActions } from "@/lib/workspace-atoms";
+import type { CategoryOption } from "@/lib/types";
 
-type CanvasContextMenuProps = {
+interface CanvasContextMenuProps {
   children: React.ReactNode;
   canvasId?: Id<"canvases">;
   isPublic?: boolean;
   isCollabEnabled?: boolean;
   isFavorite?: boolean;
   actions?: CanvasActions;
-  categories?: { _id: string; name: string }[];
+  categories?: CategoryOption[];
   onNewWorkspace: () => void;
   onImportWorkspace: () => void;
   onDeleteClick?: () => void;
   onToggleFavorite?: (id: Id<"canvases">) => void;
   copyPublicLink?: (e: React.MouseEvent) => void;
-};
+}
 
 export function CanvasContextMenu({
   children,

@@ -23,7 +23,7 @@ interface LinkSettingsProps {
   };
 }
 
-export function LinkSettings({ canvasId, canvas }: LinkSettingsProps) {
+export function LinkSettings({ canvasId, canvas }: Readonly<LinkSettingsProps>) {
   const updateLinkSettings = useMutation(api.canvases.updateLinkSettings);
   const [copied, setCopied] = React.useState(false);
   const linkEnabled = canvas.linkAccessEnabled ?? false;

@@ -22,16 +22,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { SaveTracker } from "@/lib/save-tracker";
 import { useSession } from "@/lib/auth-client";
 
-export type ExcalidrawWrapperHandle = {
+export interface ExcalidrawWrapperHandle {
   /** Immediately save any pending changes. */
   flushSave: () => void;
   /** Returns true when there is a pending debounced save. */
   hasPendingChanges: () => boolean;
   /** Returns the last saved timestamp, or null if never saved this session. */
   getLastSavedAt: () => Date | null;
-};
+}
 
-type ExcalidrawWrapperProps = {
+interface ExcalidrawWrapperProps {
   initialData?: string;
   onSave?: (data: string) => void;
   onBack?: () => void;
@@ -47,7 +47,7 @@ type ExcalidrawWrapperProps = {
   toolbarExtras?: React.ReactNode;
   topRightUI?: React.ReactNode;
   canvasId?: Id<"canvases">;
-};
+}
 
 const SAVE_DEBOUNCE_MS = 1000;
 

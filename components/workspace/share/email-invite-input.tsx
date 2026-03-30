@@ -14,7 +14,7 @@ interface EmailInviteInputProps {
   canvasId: Id<"canvases">;
 }
 
-export function EmailInviteInput({ canvasId }: EmailInviteInputProps) {
+export function EmailInviteInput({ canvasId }: Readonly<EmailInviteInputProps>) {
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);

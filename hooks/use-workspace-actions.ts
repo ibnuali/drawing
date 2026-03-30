@@ -15,6 +15,30 @@ import {
 } from "@/lib/workspace-atoms";
 import { useSession } from "@/lib/auth-client";
 
+/**
+ * Custom hook that provides all workspace action handlers.
+ *
+ * This hook encapsulates canvas and category management operations including:
+ * - Canvas CRUD operations (create, delete, rename, duplicate)
+ * - Canvas visibility and sharing (toggle public, copy links)
+ * - Category management (create, rename, delete, reorder)
+ * - Canvas-to-category assignment
+ *
+ * @returns Object containing canvasActions and individual action handlers
+ *
+ * @example
+ * ```tsx
+ * function MyComponent() {
+ *   const { canvasActions, handleCreate } = useWorkspaceActions();
+ *
+ *   return (
+ *     <button onClick={() => handleCreate("New Canvas")}>
+ *       Create Canvas
+ *     </button>
+ *   );
+ * }
+ * ```
+ */
 export function useWorkspaceActions() {
   const router = useRouter();
   const searchParams = useSearchParams();

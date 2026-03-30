@@ -22,7 +22,7 @@ interface ShareModalProps {
   userId: string;
 }
 
-export function ShareModal({ canvasId, isOpen, onClose, userId }: ShareModalProps) {
+export function ShareModal({ canvasId, isOpen, onClose, userId }: Readonly<ShareModalProps>) {
   // Real-time subscriptions (Req 8.2, 8.3): canvas data and collaborator list
   const canvas = useQuery(api.canvases.get, isOpen ? { id: canvasId } : "skip");
   const collaborators = useQuery(

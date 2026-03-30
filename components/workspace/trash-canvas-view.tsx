@@ -59,7 +59,7 @@ function formatRelativeTime(timestamp: number): string {
   return "just now";
 }
 
-type TrashCanvasCardProps = {
+interface TrashCanvasCardProps {
   canvas: {
     _id: Id<"canvases">;
     title: string;
@@ -68,9 +68,9 @@ type TrashCanvasCardProps = {
   };
   onRestore: (id: Id<"canvases">) => void;
   onPermanentDelete: (id: Id<"canvases">) => void;
-};
+}
 
-function TrashCanvasCard({ canvas, onRestore, onPermanentDelete }: TrashCanvasCardProps) {
+function TrashCanvasCard({ canvas, onRestore, onPermanentDelete }: Readonly<TrashCanvasCardProps>) {
   return (
     <ContextMenu>
       <ContextMenuTrigger

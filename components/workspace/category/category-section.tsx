@@ -32,7 +32,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { CanvasActions, CollaboratorInfo } from "@/lib/workspace-atoms";
 
-type CategorySectionProps = {
+interface CategorySectionProps {
   category: Doc<"categories">;
   canvases: Doc<"canvases">[];
   isFirst: boolean;
@@ -45,7 +45,7 @@ type CategorySectionProps = {
   canvasActions: CanvasActions;
   categories?: Doc<"categories">[];
   activeCollaborators?: Record<string, CollaboratorInfo>;
-};
+}
 
 export function CategorySection({
   category,
